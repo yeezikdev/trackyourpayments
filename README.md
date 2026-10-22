@@ -6,17 +6,15 @@ Frontend statico (un solo `index.html`) ospitato su **GitHub Pages**, dati salva
 
 ## Cosa fa
 
-- **Panoramica** – entrate, uscite, differenza e % di uscite sulle entrate del mese; scadenze ancora da pagare e saldo previsto a fine mese; grafici degli ultimi 12 mesi (entrate/uscite/differenza, andamento della %), uscite per categoria, prossime scadenze.
-- **Movimenti** – aggiungi, modifica ed elimina entrate e uscite con categoria e descrizione.
-- **Rate** – ogni rateizzazione con importo, numero rate, rate pagate, residuo, prossima e ultima scadenza.
-- **Abbonamenti** – rinnovo mensile, costo mensile e annuale, disdici/riattiva.
-- **Calendario** – tutte le scadenze del mese. Tocca una scadenza → “Segna come pagata” e l'app registra in automatico l'uscita nei movimenti.
+Dashboard con quanto c'è da pagare nel mese, prossima scadenza, rate e subscription attive; avvisi per pagamenti scaduti o in arrivo; calendario; elenco pagamenti con filtri; sezione "In arrivo"; entrate e uscite mese per mese; analisi; impostazioni con categorie, metodi di pagamento, backup ed esportazione.
+
+I dati vengono salvati nel tuo account Supabase (tabella `app_state`) e restano sincronizzati tra telefono e computer. Se la connessione manca, l'app continua a funzionare con i dati del dispositivo e li carica appena torna online.
 
 ## Setup (10 minuti)
 
 ### 1. Supabase
 1. Crea un progetto gratuito su [supabase.com](https://supabase.com).
-2. **SQL Editor → New query**, incolla il contenuto di `schema.sql` e premi **Run**.
+2. **SQL Editor → New query**, incolla il contenuto di `schema.sql` e premi **Run** (crea la tabella `app_state`).
 3. **Project Settings → API**: copia **Project URL** e la chiave **anon** (o *publishable*).
 4. **Authentication → URL Configuration**: in *Site URL* metti l'indirizzo della tua app, es. `https://yeezikdev.github.io/trackyourpayments/`.
    - Se non vuoi l'email di conferma: **Authentication → Sign In / Providers → Email** e disattiva *Confirm email*.
