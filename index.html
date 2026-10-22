@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#2C47D3">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Track Your Payments</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Payments">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
@@ -138,7 +145,17 @@ h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:
 
 .alert{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:var(--s-due-bg);color:var(--s-due);font-weight:600;font-size:14px;flex-wrap:wrap}
 .alert.red{background:var(--s-over-bg);color:var(--s-over)}
-.alert .link{color:inherit;text-decoration:underline;margin-left:auto}
+.alert .link{color:inherit;text-decoration:underline;margin-left:auto;flex:none}
+.alert{flex-wrap:nowrap}
+.alert>svg{flex:none}
+.al-t{flex:1;min-width:0}
+.al-short{display:none}
+@media (max-width:700px){
+  .alert{padding:10px 14px;gap:10px;font-size:13.5px;border-radius:12px}
+  .al-long{display:none}
+  .al-short{display:inline}
+  .alert>svg{width:17px;height:17px}
+}
 
 /* payment rows */
 .rows{display:flex;flex-direction:column}
@@ -444,6 +461,10 @@ table.inc input{height:34px;max-width:130px;text-align:right;font-variant-numeri
 .auth-switch button:hover{text-decoration:underline}
 .auth-msg{font-size:13.5px;margin:0;line-height:1.45}
 .auth-msg:empty{display:none}
+.auth-plbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.auth-forgot{background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
+.auth-forgot:hover{text-decoration:underline}
+.auth [hidden]{display:none!important}
 .auth-msg.err{color:var(--s-over)} .auth-msg.ok{color:var(--s-paid)}
 .auth-note{font-size:12.5px;color:var(--muted);margin:6px 0 0;display:flex;gap:8px;align-items:flex-start;line-height:1.45}
 .auth-note svg{flex:none;margin-top:1px}
@@ -471,11 +492,11 @@ table.inc input{height:34px;max-width:130px;text-align:right;font-variant-numeri
     <form class="auth-box" id="authForm" novalidate>
       <h1 id="authTitle">Bentornato</h1>
       <p class="sub" id="authSub">Accedi per vedere le tue scadenze.</p>
-      <label>Email<input type="email" id="authEmail" autocomplete="email" inputmode="email" placeholder="nome@email.com" required></label>
-      <label>Password<span class="auth-field"><input type="password" id="authPass" autocomplete="current-password" minlength="6" placeholder="Almeno 6 caratteri" required><button type="button" class="auth-eye" id="authEye" aria-label="Mostra password">Mostra</button></span></label>
+      <label id="authEmailWrap">Email<input type="email" id="authEmail" autocomplete="email" inputmode="email" placeholder="nome@email.com" required></label>
+      <label id="authPassWrap"><span class="auth-plbl"><span id="authPassLbl">Password</span><button type="button" class="auth-forgot" id="authForgot">Password dimenticata?</button></span><span class="auth-field"><input type="password" id="authPass" autocomplete="current-password" minlength="6" placeholder="Almeno 6 caratteri" required><button type="button" class="auth-eye" id="authEye" aria-label="Mostra password">Mostra</button></span></label>
       <p class="auth-msg" id="authMsg" role="status"></p>
       <button class="btn primary wide" type="submit" id="authIn">Accedi</button>
-      <p class="auth-switch"><span id="authSwitchTxt">Non hai un account?</span> <button type="button" id="authUp">Creane uno</button></p>
+      <p class="auth-switch" id="authSwitch"><span id="authSwitchTxt">Non hai un account?</span> <button type="button" id="authUp">Creane uno</button></p>
       <p class="auth-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>I tuoi dati sono visibili solo a te.</p>
     </form>
   </main>
@@ -590,57 +611,103 @@ async function initCloud(user){
       if(!hasRealData(S))S=normalize(blankState());   // primo accesso senza dati: si parte puliti
       S.updatedAt=S.updatedAt||Date.now();C=null;lsSet();render();await pushCloud();
     }
+    listenRealtime(user.id);
     renderSide();
   }catch(e){store.ref=null;store.mode="local";renderSide();toast("Server non raggiungibile: per ora i dati restano su questo dispositivo")}
 }
-// quando torni sull'app (o ogni minuto) controlla se un altro dispositivo ha salvato qualcosa di più recente
+// applica i dati arrivati da un altro dispositivo, se più recenti di quelli che hai qui
+function applyRemote(r){
+  if(!r||!r.data||!(+r.updated_ms>S.updatedAt)||store.timer)return;
+  S=normalize(r.data);C=null;lsSet();applyTheme();
+  if(!document.querySelector("#itemForm")&&document.querySelector(".scrim"))closeModal();
+  render();toast("Aggiornato da un altro dispositivo");
+}
+// in tempo reale: Supabase avvisa appena l'altro dispositivo salva
+function listenRealtime(userId){
+  if(store.channel)return;
+  try{
+    store.channel=sb.channel("app_state_"+userId)
+      .on("postgres_changes",{event:"*",schema:"public",table:"app_state",filter:"user_id=eq."+userId},p=>applyRemote(p.new))
+      .subscribe(st=>{const on=st==="SUBSCRIBED";if(!!store.unsub!==on){store.unsub=on;renderSide()}});
+  }catch(e){store.channel=null}
+}
+// riserva: quando torni sull'app (o ogni minuto) ricontrolla comunque
 async function pullCloud(){
   if(!store.ref||store.timer||document.visibilityState!=="visible")return;
-  try{const r=await store.ref.get();
-    if(r&&r.data&&+r.updated_ms>S.updatedAt){S=normalize(r.data);C=null;lsSet();applyTheme();
-      if(!document.querySelector("#itemForm")&&document.querySelector(".scrim"))closeModal();
-      render();toast("Aggiornato da un altro dispositivo")}}catch(e){}
+  try{applyRemote(await store.ref.get())}catch(e){}
 }
 document.addEventListener("visibilitychange",pullCloud);
 setInterval(pullCloud,60000);
 
 async function doLogout(){
   if(store.timer){clearTimeout(store.timer);await pushCloud()}
+  try{if(store.channel)await sb.removeChannel(store.channel)}catch(e){}
   try{await sb.auth.signOut()}catch(e){}
   try{localStorage.removeItem(LS_KEY)}catch(e){}
   location.reload();
 }
 async function startAuth(){
   const box=document.getElementById("auth"),msg=document.getElementById("authMsg");
+  const $a=id=>document.getElementById(id);
   const say=(t,cls)=>{msg.textContent=t;msg.className="auth-msg "+(cls||"")};
   if(!window.supabase){render();toast("Accesso non disponibile: uso i dati di questo dispositivo");return}
+  const hash=location.hash||"";
+  let recovery=/type=recovery/.test(hash);
+  const linkErr=/error_code=otp_expired|error=access_denied/.test(hash);
   sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const back=location.origin+location.pathname;
   const enter=user=>{box.hidden=true;render();initCloud(user)};
-  const go=async up=>{
-    const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPass").value;
+  const TXT={
+    in:["Bentornato","Accedi per vedere le tue scadenze.","Accedi","Non hai un account?","Creane uno"],
+    up:["Crea il tuo account","Ti servono solo email e password.","Crea account","Hai già un account?","Accedi"],
+    forgot:["Reimposta la password","Scrivi la tua email: ti mandiamo un link per sceglierne una nuova.","Invia il link","Ti è tornata in mente?","Accedi"],
+    newpass:["Scegli la nuova password","Almeno 6 caratteri. Dopo il salvataggio entri direttamente nell'app.","Salva la nuova password","",""]};
+  let mode="in";
+  const setMode=m=>{mode=m;say("");const t=TXT[m];
+    $a("authTitle").textContent=t[0];$a("authSub").textContent=t[1];$a("authIn").textContent=t[2];
+    $a("authSwitchTxt").textContent=t[3];$a("authUp").textContent=t[4];$a("authSwitch").hidden=m==="newpass";
+    $a("authEmailWrap").hidden=m==="newpass";$a("authPassWrap").hidden=m==="forgot";
+    $a("authForgot").hidden=m!=="in";$a("authPassLbl").textContent=m==="newpass"?"Nuova password":"Password";
+    $a("authPass").setAttribute("autocomplete",m==="in"?"current-password":"new-password")};
+  const busy=on=>{const btn=$a("authIn");if(on){btn.dataset.l=btn.textContent;btn.disabled=true;btn.textContent="Un momento…"}else{btn.disabled=false;btn.textContent=btn.dataset.l||btn.textContent}};
+  const errIt=m=>m==="Invalid login credentials"?"Email o password non corrette. Riprova."
+    :m==="User already registered"?"Esiste già un account con questa email: accedi."
+    :/same.*password|different from the old/i.test(m)?"La nuova password deve essere diversa da quella vecchia."
+    :/rate limit|security purposes/i.test(m)?"Hai chiesto troppi link in poco tempo: aspetta un minuto e riprova.":m;
+  const go=async()=>{
+    const email=$a("authEmail").value.trim(),password=$a("authPass").value;
+    if(mode==="forgot"){
+      if(!email){say("Scrivi l'email del tuo account.","err");return}
+      busy(true);const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:back});busy(false);
+      if(error){say(errIt(error.message),"err");return}
+      say("Se esiste un account con questa email, ti è arrivato un link per reimpostare la password. Aprilo da questo dispositivo.","ok");return}
+    if(mode==="newpass"){
+      if(password.length<6){say("La password deve avere almeno 6 caratteri.","err");return}
+      busy(true);const{data,error}=await sb.auth.updateUser({password});busy(false);
+      if(error){say(errIt(error.message),"err");return}
+      recovery=false;history.replaceState(null,"",back);toast("Password aggiornata");enter(data.user);return}
     if(!email||password.length<6){say("Inserisci la tua email e una password di almeno 6 caratteri.","err");return}
-    say("");const btn=document.getElementById("authIn"),lbl=btn.textContent;btn.disabled=true;btn.textContent="Un momento…";
-    const{data,error}=up?await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}})
-                        :await sb.auth.signInWithPassword({email,password});
-    btn.disabled=false;btn.textContent=lbl;
-    if(error){say(error.message==="Invalid login credentials"?"Email o password non corrette. Riprova.":error.message==="User already registered"?"Esiste già un account con questa email: accedi.":error.message,"err");return}
-    if(up&&!data.session){setMode(false);say("Account creato. Apri il link che ti abbiamo mandato via email, poi accedi.","ok");return}
+    busy(true);
+    const{data,error}=mode==="up"?await sb.auth.signUp({email,password,options:{emailRedirectTo:back}})
+                                 :await sb.auth.signInWithPassword({email,password});
+    busy(false);
+    if(error){say(errIt(error.message),"err");return}
+    if(mode==="up"&&!data.session){setMode("in");say("Account creato. Apri il link che ti abbiamo mandato via email, poi accedi.","ok");return}
     say("");enter(data.user);
   };
-  let signup=false;
-  const setMode=up=>{signup=up;say("");
-    document.getElementById("authTitle").textContent=up?"Crea il tuo account":"Bentornato";
-    document.getElementById("authSub").textContent=up?"Ti servono solo email e password.":"Accedi per vedere le tue scadenze.";
-    document.getElementById("authIn").textContent=up?"Crea account":"Accedi";
-    document.getElementById("authSwitchTxt").textContent=up?"Hai già un account?":"Non hai un account?";
-    document.getElementById("authUp").textContent=up?"Accedi":"Creane uno";
-    document.getElementById("authPass").setAttribute("autocomplete",up?"new-password":"current-password")};
-  document.getElementById("authForm").addEventListener("submit",e=>{e.preventDefault();e.stopPropagation();go(signup)});
-  document.getElementById("authUp").addEventListener("click",()=>setMode(!signup));
-  document.getElementById("authEye").addEventListener("click",e=>{const i=document.getElementById("authPass"),show=i.type==="password";
+  $a("authForm").addEventListener("submit",e=>{e.preventDefault();e.stopPropagation();go()});
+  $a("authUp").addEventListener("click",()=>setMode(mode==="in"?"up":"in"));
+  $a("authForgot").addEventListener("click",()=>{setMode("forgot");$a("authEmail").focus()});
+  $a("authEye").addEventListener("click",e=>{const i=$a("authPass"),show=i.type==="password";
     i.type=show?"text":"password";e.currentTarget.textContent=show?"Nascondi":"Mostra";e.currentTarget.setAttribute("aria-label",show?"Nascondi password":"Mostra password")});
+  const showNewPass=()=>{box.hidden=false;setMode("newpass");$a("authPass").value="";$a("authPass").focus()};
+  sb.auth.onAuthStateChange(ev=>{if(ev==="PASSWORD_RECOVERY"&&mode!=="newpass"){recovery=true;showNewPass()}});
   let session=null;try{session=(await sb.auth.getSession()).data.session}catch(e){}
-  if(session)enter(session.user);else{box.hidden=false;document.getElementById("authEmail").focus()}
+  if(recovery&&session){showNewPass();return}
+  if(session){enter(session.user);return}
+  box.hidden=false;setMode("in");
+  if(linkErr){history.replaceState(null,"",back);setMode("forgot");say("Il link è scaduto o è già stato usato. Richiedine uno nuovo.","err")}
+  $a("authEmail").focus();
 }
 
 /* ================= motore delle scadenze ================= */
@@ -817,8 +884,8 @@ function vDashboard(){
   const range=S.settings.upRange==="month"?"month":"two";
   const upTo=range==="month"?mTo:(()=>{const n=parse(addMonths(mFrom,1));return iso(n.y,n.m,dim(n.y,n.m))})();
   const list=compute().occ.filter(o=>unpaid(o)&&o.date<=upTo);
-  const banner=(od.length?`<div class="alert red">${ico("flag")} ${od.length===1?"1 pagamento scaduto non ancora segnato come pagato":od.length+" pagamenti scaduti non ancora segnati come pagati"} (${money(sum(od))}).<button class="link" data-act="nav" data-v="payments" data-tab="scaduti">Controlla</button></div>`:"")+
-    (w7.length?`<div class="alert">${ico("bell")} Attenzione: ${w7.length===1?"1 pagamento in scadenza":w7.length+" pagamenti in scadenza"} nei prossimi 7 giorni, per ${money(sum(w7))}.<button class="link" data-act="nav" data-v="upcoming">Vedi</button></div>`:"");
+  const banner=(od.length?`<div class="alert red">${ico("flag")}<span class="al-t"><span class="al-long">${od.length===1?"1 pagamento scaduto non ancora segnato come pagato":od.length+" pagamenti scaduti non ancora segnati come pagati"} (${money(sum(od))}).</span><span class="al-short">${od.length===1?"1 scaduto da pagare":od.length+" scaduti da pagare"}, ${money(sum(od))}</span></span><button class="link" data-act="nav" data-v="payments" data-tab="scaduti">Controlla</button></div>`:"")+
+    (w7.length?`<div class="alert">${ico("bell")}<span class="al-t"><span class="al-long">Attenzione: ${w7.length===1?"1 pagamento in scadenza":w7.length+" pagamenti in scadenza"} nei prossimi 7 giorni, per ${money(sum(w7))}.</span><span class="al-short">${w7.length} in scadenza entro 7 giorni, ${money(sum(w7))}</span></span><button class="link" data-act="nav" data-v="upcoming">Vedi</button></div>`:"");
   return `${banner}
   <section class="grid-4">
     <div class="kpi hero"><span class="eyebrow">Da pagare questo mese</span><span class="val">${money(mLeft)}</span>
@@ -1212,7 +1279,7 @@ function setStatus(key,v){
 
 function openForm(kind,id){
   const it=id?S.items.find(x=>x.id===id):null;kind=it?it.kind:(kind||"sub");
-  const d=it||{kind,name:"",desc:"",amount:"",currency:cur(),freq:"monthly",customDays:30,category:kind==="rata"?"Finanziamenti":kind==="sub"?"Streaming":"Casa",method:S.methods[0]||"",notes:"",status:kind==="rata"?"attiva":"attivo",reminder:+S.settings.remindDefault,emoji:"",total:12,paidInit:0,start:TODAY,dom:parse(TODAY).d,finalAmount:"",anchor:TODAY,since:"",end:""};
+  const d=it||{kind,name:"",desc:"",amount:"",currency:cur(),freq:"monthly",customDays:30,category:kind==="rata"?"Finanziamenti":kind==="sub"?"Streaming":"Casa",method:S.methods[0]||"",notes:"",status:kind==="rata"?"attiva":"attivo",reminder:+S.settings.remindDefault,emoji:"",total:12,paidInit:0,start:TODAY,dom:parse(TODAY).d,finalAmount:"",anchor:TODAY,since:"",end:"",autopay:kind==="rata"};
   const sel=(arr,v)=>arr.map(([k,l])=>`<option value="${esc(k)}" ${String(v)===String(k)?"selected":""}>${esc(l)}</option>`).join("");
   const freqs=Object.keys(FREQ).map(k=>[k,FREQ[k].l]);
   const cats=allCats();if(d.category&&!cats.includes(d.category))cats.push(d.category);
@@ -1481,6 +1548,7 @@ document.addEventListener("click",e=>{if(UI.search&&!e.target.closest("#searchBo
 S=normalize(lsGet()||blankState());
 applyTheme();
 startAuth();
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
 })();
 </script>
 

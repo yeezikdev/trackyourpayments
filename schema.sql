@@ -17,3 +17,14 @@ alter table public.app_state enable row level security;
 drop policy if exists "solo i miei dati" on public.app_state;
 create policy "solo i miei dati" on public.app_state
   for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- sincronizzazione in tempo reale tra i dispositivi
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'app_state'
+  ) then
+    alter publication supabase_realtime add table public.app_state;
+  end if;
+end $$;
