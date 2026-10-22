@@ -1233,7 +1233,7 @@ function openForm(kind,id){
     <div class="field"><label for="f_freq">Frequenza</label><select id="f_freq" name="freq" data-change="freq">${sel(freqs,d.freq)}</select></div>
     <div class="field" id="customWrap" ${d.freq==="custom"?"":"hidden"}><label for="f_cd">Ogni quanti giorni</label><input type="number" id="f_cd" name="customDays" min="1" max="730" value="${d.customDays||30}"></div>
     ${kind==="rata"?`
-    <div class="field"><label for="f_start">Data della prima rata</label><input type="date" id="f_start" name="start" data-prev="1" value="${d.start}"><span class="hint">Le rate successive cadono nello stesso giorno; nei mesi più corti, l'ultimo giorno del mese</span></div>
+    <div class="field"><label for="f_start">Data della prima rata</label><input type="date" id="f_start" name="start" data-prev="1" value="${d.start}"></div>
 `:`
     <div class="field"><label for="f_since">Data di inizio</label><input type="date" id="f_since" name="since" value="${d.since||(it?d.anchor:TODAY)}" required><span class="hint">I rinnovi si ripetono da questa data con la frequenza scelta; quelli passati risultano pagati</span></div>
     <input type="hidden" name="end" value="${esc(d.end||"")}">`}
