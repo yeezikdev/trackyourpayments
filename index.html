@@ -323,6 +323,29 @@ table.inc input{height:34px;max-width:130px;text-align:right;font-variant-numeri
 .dlist div span{display:block;font-size:12px;color:var(--muted)}
 .dlist div b{font-weight:600}
 .dlist .full{grid-column:1/-1}
+.rprev{display:flex;flex-direction:column;gap:12px;background:var(--surface-2);border-radius:14px;padding:14px 16px}
+.rprev-empty{margin:0;font-size:13px;color:var(--muted)}
+.rprev-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.rprev-top span{display:block;font-size:12px;color:var(--muted)}
+.rprev-top b{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.rprev-top em{display:block;font-style:normal;font-size:12px;color:var(--muted)}
+.rprev-count{font-size:12.5px;color:var(--muted);text-align:right;line-height:1.5}
+.rprev-count b{color:var(--ink);font-weight:600}
+.rprev-h{font-size:12px;color:var(--muted);font-weight:600;padding-top:10px;border-top:1px solid var(--line)}
+.tl{list-style:none;margin:0;padding:0 4px 0 0;max-height:260px;overflow:auto}
+.tl li{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;position:relative;isolation:isolate}
+.tl li::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl li:first-child::before{top:50%}
+.tl li:last-child::before{bottom:50%}
+.tl li:only-child::before{display:none}
+.tl .pt{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid color-mix(in srgb,var(--muted) 45%,var(--line));position:relative;z-index:1;justify-self:center}
+.tl li.paid .pt{background:var(--s-paid);border-color:var(--s-paid)}
+.tl li.next .pt{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.tl .tx b{display:block;font-size:13.5px;font-weight:600}
+.tl .tx span{font-size:12px;color:var(--muted)}
+.tl li.paid .tx b,.tl li.paid .am{color:var(--muted)}
+.tl li.next .tx span{color:var(--accent);font-weight:600}
+.tl .am{font-size:13.5px;font-weight:600;white-space:nowrap}
 .emoji-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .emoji-row button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);font-size:17px}
 .kind-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -1209,14 +1232,14 @@ function openForm(kind,id){
     <div class="field" id="customWrap" ${d.freq==="custom"?"":"hidden"}><label for="f_cd">Ogni quanti giorni</label><input type="number" id="f_cd" name="customDays" min="1" max="730" value="${d.customDays||30}"></div>
     ${kind==="rata"?`
     <div class="field"><label for="f_start">Data della prima rata</label><input type="date" id="f_start" name="start" data-prev="1" value="${d.start}"><span class="hint">Le rate successive cadono nello stesso giorno; nei mesi più corti, l'ultimo giorno del mese</span></div>
-    <div class="field full" id="ratePrev" aria-live="polite"></div>
-    <div class="field full"><label class="flabel" style="display:flex;align-items:center;gap:12px;justify-content:space-between;font-weight:500;color:var(--ink)"><span><b style="font-weight:600">Addebito automatico</b><br><span class="hint">Segna come pagata ogni rata quando arriva la sua data</span></span><span class="switch"><input type="checkbox" id="f_autopay" name="autopay" ${d.autopay?"checked":""}><span></span></span></label></div>`:`
+    <div class="field full"><label class="flabel" style="display:flex;align-items:center;gap:12px;justify-content:space-between;font-weight:500;color:var(--ink)"><span><b style="font-weight:600">Addebito automatico</b><br><span class="hint">Segna come pagata ogni rata quando arriva la sua data</span></span><span class="switch"><input type="checkbox" id="f_autopay" name="autopay" data-prev="1" ${d.autopay?"checked":""}><span></span></span></label></div>`:`
     <div class="field"><label for="f_since">Data di inizio</label><input type="date" id="f_since" name="since" value="${d.since||(it?d.anchor:TODAY)}" required><span class="hint">I rinnovi si ripetono da questa data con la frequenza scelta; quelli passati risultano pagati</span></div>
     <input type="hidden" name="end" value="${esc(d.end||"")}">`}
     ${kind!=="rata"?`<input type="hidden" name="category" value="${esc(d.category||"")}"><input type="hidden" name="method" value="${esc(d.method||"")}">
     <div class="field"><label for="f_status">Stato</label><select id="f_status" name="status">${sel(Object.entries(ITEM_STATUS[kind]),subStatus(d))}</select></div>`:
     `<input type="hidden" name="desc" value="${esc(d.desc||"")}"><input type="hidden" name="category" value="${esc(d.category||"Finanziamenti")}"><input type="hidden" name="method" value="${esc(d.method||"")}"><input type="hidden" name="status" value="${esc(d.status||"attiva")}"><input type="hidden" name="notes" value="${esc(d.notes||"")}">`}
-    ${kind==="rata"?`<div class="field"><label for="f_rem">Promemoria</label><select id="f_rem" name="reminder">${sel([[0,"Nessuno"],[1,"1 giorno prima"],[3,"3 giorni prima"],[7,"7 giorni prima"]],d.reminder)}</select></div>`:
+    ${kind==="rata"?`<div class="field"><label for="f_rem">Promemoria</label><select id="f_rem" name="reminder">${sel([[0,"Nessuno"],[1,"1 giorno prima"],[3,"3 giorni prima"],[7,"7 giorni prima"]],d.reminder)}</select></div>
+    <div class="field full" id="ratePrev" aria-live="polite"></div>`:
     `<input type="hidden" name="reminder" value="${esc(d.reminder??"")}"><input type="hidden" name="notes" value="${esc(d.notes||"")}">`}
    </div><div class="err" id="formErr" hidden></div></div>
    <div class="m-foot">${it?`<button type="button" class="btn danger left" data-act="askDelete" data-id="${it.id}">${ico("trash")} Elimina</button>`:""}<button type="button" class="btn ghost" data-act="close">Annulla</button><button type="submit" class="btn primary">${it?"Salva modifiche":"Aggiungi"}</button></div>
@@ -1233,17 +1256,28 @@ function countBefore(it,date){let k=0;for(let i=0;i<it.total;i++){if(stepDate(it
 function ratePreview(){
   const box=document.getElementById("ratePrev");const f=document.getElementById("itemForm");if(!box||!f)return;
   const T=numIn(f.amount.value),n=parseInt(f.total.value),start=f.start.value;
-  if(!(T>0)||!(n>=1)||!start){box.innerHTML=`<div class="dlist"><div class="full"><span>Anteprima</span><b style="font-weight:500">Inserisci importo totale, numero di rate e data della prima rata.</b></div></div>`;return}
+  if(!(T>0)||!(n>=1)||n>600||!start){box.innerHTML=`<div class="rprev"><p class="rprev-empty">Inserisci importo totale, numero di rate e data della prima rata per vedere l'importo di ogni rata e le scadenze.</p></div>`;return}
   const sp=splitTotal(T,n);const tmp={kind:"rata",start,dom:parse(start).d,freq:f.freq.value,customDays:+(f.customDays&&f.customDays.value)||30,total:n};
   const idField=f.querySelector("[name=itemId]").value;const prev=idField?S.items.find(x=>x.id===idField):null;
   const ref=prev?(prev.createdOn||null):TODAY;
   const paidN=ref?countBefore(tmp,ref):Math.min(+prev.paidInit||0,n);
-  const last=stepDate(tmp,n-1);const next=paidN<n?stepDate(tmp,paidN):null;
-  box.innerHTML=`<div class="dlist">
-    <div><span>Importo di ogni rata</span><b>${n} × ${money(sp.amount)}</b>${sp.final!=null?`<span>ultima rata ${money(sp.final)}</span>`:""}</div>
-    <div><span>Ultima rata</span><b>${fmtDate(last,{year:true})}</b></div>
-    <div><span>${ref?"Già pagate (data passata)":"Già pagate"}</span><b>${paidN} di ${n} · ${money(Math.min(paidN,n-1)*sp.amount+(paidN===n?(sp.final!=null?sp.final:sp.amount):0))}</b></div>
-    <div><span>Prossima rata</span><b>${next?fmtDate(next,{year:true}):"Nessuna, tutte pagate"}</b></div></div>`;
+  const auto=!!(f.autopay&&f.autopay.checked);
+  let paidCount=0,nextI=-1;const rows=[];
+  for(let i=0;i<n;i++){
+    const d=stepDate(tmp,i);const key=prev?prev.id+"@"+d:null;const rec=key?S.payments[key]:null;
+    const paid=rec?rec.status==="paid":(i<paidN||(auto&&d<=TODAY));
+    if(paid)paidCount++;else if(nextI<0)nextI=i;
+    const amt=(i===n-1&&sp.final!=null)?sp.final:sp.amount;
+    const st=paid?"paid":i===nextI?"next":"";
+    rows.push(`<li class="${st}"><span class="pt"></span><span class="tx"><b>${fmtDate(d,{year:true})}</b><span>Rata ${i+1} di ${n}${paid?", pagata":i===nextI?(d<TODAY?", scaduta":", prossima"):""}</span></span><span class="am">${money(amt)}</span></li>`);
+  }
+  box.innerHTML=`<div class="rprev">
+    <div class="rprev-top"><div><span>Importo di ogni rata</span><b>${money(sp.amount)}</b>${sp.final!=null?`<em>ultima rata ${money(sp.final)}</em>`:""}</div>
+      <div class="rprev-count"><b>${paidCount}</b> pagate<br><b>${n-paidCount}</b> da pagare</div></div>
+    <div class="rprev-h">Scadenze</div>
+    <ol class="tl">${rows.join("")}</ol></div>`;
+  const list=box.querySelector(".tl"),nx=list&&list.querySelector("li.next");
+  if(list&&nx)list.scrollTop=Math.max(0,nx.offsetTop-list.offsetTop-44);
 }
 const numIn=v=>{if(v==null)return NaN;v=String(v).trim().replace(/\s/g,"");if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(v))v=v.replace(/\./g,"");return parseFloat(v)};
 function saveForm(form){
