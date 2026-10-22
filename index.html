@@ -1199,8 +1199,8 @@ function openForm(kind,id){
    <input type="hidden" name="kind" value="${kind}">
    <div class="fgrid">
     <div class="field full"><label for="f_name">Nome</label><input type="text" id="f_name" name="name" value="${esc(d.name)}" required maxlength="60" placeholder="${kind==="rata"?"Es. iPhone 16 Pro":kind==="sub"?"Es. Netflix":"Es. Bolletta gas"}"></div>
-    ${kind!=="rata"?`<div class="field full"><label for="f_emoji">Logo / emoji</label><input type="text" id="f_emoji" name="emoji" value="${esc(d.emoji||"")}" maxlength="4" style="max-width:90px"><div class="emoji-row">${EMOJIS.map(e=>`<button type="button" data-act="emoji" data-v="${e}" aria-label="Usa ${e}">${e}</button>`).join("")}</div></div>`:""}
-    ${kind!=="rata"?`<div class="field full"><label for="f_desc">Descrizione</label><input type="text" id="f_desc" name="desc" value="${esc(d.desc||"")}" maxlength="120"></div>`:""}
+    ${kind!=="rata"?`<input type="hidden" name="emoji" value="${esc(d.emoji||"")}">`:""}
+    ${kind!=="rata"?`<input type="hidden" name="desc" value="${esc(d.desc||"")}">`:""}
     ${kind==="rata"?`<div class="field"><label for="f_amount">Importo totale</label><input type="text" inputmode="decimal" id="f_amount" name="amount" data-prev="1" value="${it?String(rataTotal(d).toFixed(2)).replace(".",","):""}" required placeholder="Es. 1800"></div>
     <div class="field"><label for="f_total">Numero totale di rate</label><input type="number" id="f_total" name="total" data-prev="1" min="1" max="600" value="${d.total}"></div>`:
     `<div class="field"><label for="f_amount">Prezzo</label><input type="text" inputmode="decimal" id="f_amount" name="amount" value="${d.amount!==""?String(d.amount).replace(".",","):""}" required placeholder="0,00"></div>
@@ -1211,21 +1211,21 @@ function openForm(kind,id){
     <div class="field"><label for="f_start">Data della prima rata</label><input type="date" id="f_start" name="start" data-prev="1" value="${d.start}"><span class="hint">Le rate successive cadono nello stesso giorno; nei mesi più corti, l'ultimo giorno del mese</span></div>
     <div class="field full" id="ratePrev" aria-live="polite"></div>
     <div class="field full"><label class="flabel" style="display:flex;align-items:center;gap:12px;justify-content:space-between;font-weight:500;color:var(--ink)"><span><b style="font-weight:600">Addebito automatico</b><br><span class="hint">Segna come pagata ogni rata quando arriva la sua data</span></span><span class="switch"><input type="checkbox" id="f_autopay" name="autopay" ${d.autopay?"checked":""}><span></span></span></label></div>`:`
-    <div class="field"><label for="f_anchor">Data del prossimo pagamento</label><input type="date" id="f_anchor" name="anchor" value="${d.anchor}"></div>
-    <div class="field"><label for="f_since">Data di inizio</label><input type="date" id="f_since" name="since" value="${d.since||""}"><span class="hint">I pagamenti passati finiscono nello storico</span></div>
-    <div class="field"><label for="f_end">Data di scadenza</label><input type="date" id="f_end" name="end" value="${d.end||""}"><span class="hint">Opzionale</span></div>`}
-    ${kind!=="rata"?`<div class="field"><label for="f_cat">Categoria</label><select id="f_cat" name="category">${sel(cats.map(c=>[c,c]),d.category)}</select></div>
-    <div class="field"><label for="f_method">Metodo di pagamento</label><select id="f_method" name="method">${sel(methods.map(c=>[c,c]),d.method)}</select></div>
+    <div class="field"><label for="f_since">Data di inizio</label><input type="date" id="f_since" name="since" value="${d.since||(it?d.anchor:TODAY)}" required><span class="hint">I rinnovi si ripetono da questa data con la frequenza scelta; quelli passati risultano pagati</span></div>
+    <input type="hidden" name="end" value="${esc(d.end||"")}">`}
+    ${kind!=="rata"?`<input type="hidden" name="category" value="${esc(d.category||"")}"><input type="hidden" name="method" value="${esc(d.method||"")}">
     <div class="field"><label for="f_status">Stato</label><select id="f_status" name="status">${sel(Object.entries(ITEM_STATUS[kind]),subStatus(d))}</select></div>`:
     `<input type="hidden" name="desc" value="${esc(d.desc||"")}"><input type="hidden" name="category" value="${esc(d.category||"Finanziamenti")}"><input type="hidden" name="method" value="${esc(d.method||"")}"><input type="hidden" name="status" value="${esc(d.status||"attiva")}"><input type="hidden" name="notes" value="${esc(d.notes||"")}">`}
-    <div class="field"><label for="f_rem">Promemoria</label><select id="f_rem" name="reminder">${sel([[0,"Nessuno"],[1,"1 giorno prima"],[3,"3 giorni prima"],[7,"7 giorni prima"]],d.reminder)}</select></div>
-    ${kind!=="rata"?`<div class="field full"><label for="f_notes">Note</label><textarea id="f_notes" name="notes" maxlength="500">${esc(d.notes||"")}</textarea></div>`:""}
+    ${kind==="rata"?`<div class="field"><label for="f_rem">Promemoria</label><select id="f_rem" name="reminder">${sel([[0,"Nessuno"],[1,"1 giorno prima"],[3,"3 giorni prima"],[7,"7 giorni prima"]],d.reminder)}</select></div>`:
+    `<input type="hidden" name="reminder" value="${esc(d.reminder??"")}"><input type="hidden" name="notes" value="${esc(d.notes||"")}">`}
    </div><div class="err" id="formErr" hidden></div></div>
    <div class="m-foot">${it?`<button type="button" class="btn danger left" data-act="askDelete" data-id="${it.id}">${ico("trash")} Elimina</button>`:""}<button type="button" class="btn ghost" data-act="close">Annulla</button><button type="submit" class="btn primary">${it?"Salva modifiche":"Aggiungi"}</button></div>
    <input type="hidden" name="itemId" value="${it?it.id:""}"></form>`,true);
   const n=document.getElementById("f_name");if(n)n.focus();
   ratePreview();
 }
+function nextFromSince(it){const tmp={kind:"sub",anchor:it.since,freq:it.freq,customDays:it.customDays};
+  for(let i=0;i<5000;i++){const d=stepDate(tmp,i);if(d>=TODAY)return d}return it.since}
 function rataTotal(d){const a=+d.amount||0,n=+d.total||0;if(!n)return 0;const last=d.finalAmount!=null&&d.finalAmount!==""?+d.finalAmount:a;return a*(n-1)+last}
 // divide il totale in centesimi: le prime rate uguali, l'ultima assorbe l'arrotondamento
 function splitTotal(T,n){const c=Math.round(T*100);const base=Math.floor(c/n);const last=c-base*(n-1);return{amount:base/100,final:last!==base?last/100:null}}
@@ -1262,8 +1262,11 @@ function saveForm(form){
     it.createdOn=prev?(prev.createdOn||null):TODAY;
     it.paidInit=it.createdOn?countBefore(it,it.createdOn):Math.min(+prev.paidInit||0,it.total);
   }else{
-    it.emoji=g("emoji");it.currency=g("currency")||cur();it.anchor=g("anchor");it.since=g("since");it.end=g("end");
-    if(!it.anchor)return err("Indica la data del prossimo pagamento.");
+    it.emoji=g("emoji");it.currency=g("currency")||cur();it.since=g("since");it.end=g("end");
+    if(!it.since)return err("Indica la data di inizio.");
+    // il prossimo pagamento è il primo rinnovo da oggi in poi, partendo dalla data di inizio
+    const same=prev&&prev.anchor&&prev.since===it.since&&prev.freq===it.freq&&(+prev.customDays||30)===it.customDays;
+    it.anchor=same?prev.anchor:nextFromSince(it);
     if(it.end&&it.end<it.anchor)return err("La data di scadenza è precedente al prossimo pagamento.");
     if(it.since&&it.since>it.anchor)return err("La data di inizio non può essere dopo il prossimo pagamento.");
     it.pauses=prev&&prev.pauses?prev.pauses.map(p=>Object.assign({},p)):[];it.cancelledOn=prev?prev.cancelledOn:undefined;
