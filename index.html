@@ -866,7 +866,7 @@ function row(o,opts){
   return `<button class="row" data-act="occ" data-key="${esc(o.key)}">
     <span class="dbox st-${o.status}"><b>${p.d}</b><span>${MSHORT[p.m-1]}</span></span>
     <span style="min-width:0"><span class="rname" style="display:block">${o.emoji?o.emoji+" ":""}${esc(o.name)}</span>
-      <span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${esc(o.category||"")}${o.status!=="paid"?` · ${rel(o.date)}`:""}</span></span>
+      <span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${o.status!=="paid"?rel(o.date):""}</span></span>
     <span class="st"><span class="pill st-${o.status}">${STATUS[o.status]}</span></span>
     <span class="amt ${o.status==="paid"?"paid-amt":""}">${money(o.amount,o.currency)}</span></button>`;
 }
@@ -941,7 +941,7 @@ function rataCard(it){
   const done=it.status==="completata"||s.restN===0;
   return `<article class="icard ${it.status!=="attiva"||done?"dim":""}">
    <div class="ic-head"><div class="ic-logo k-rata">${esc((it.name||"?").trim().charAt(0).toUpperCase())}</div>
-     <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${esc(it.category||"")}${it.desc?" · "+esc(it.desc):""}</div></div>
+     <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${esc(it.desc||"")}</div></div>
      ${it.status!=="attiva"?`<span class="pill st-future">${ITEM_STATUS.rata[it.status]}</span>`:done?`<span class="pill st-paid">Completata</span>`:""}</div>
    <div class="ic-price">${money(it.amount)}<small> / ${it.freq==="custom"?"ogni "+(it.customDays||30)+" giorni":f.short}</small></div>
    <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>${s.paidN}</b> di ${s.count} rate pagate</span><b class="num">${pct}%</b></div>
@@ -974,7 +974,7 @@ function subCard(it){
   const pillTxt=ss==="pausa"?(pz.to?`In pausa fino al ${fmtShort(pz.to)}`:"In pausa"):ITEM_STATUS.sub[ss];
   return `<article class="icard ${ss!=="attivo"?"dim":""}">
    <div class="ic-head"><div class="ic-logo k-${it.kind}">${it.emoji?esc(it.emoji):esc((it.name||"?").charAt(0).toUpperCase())}</div>
-     <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${esc(it.category||"")}${it.method?" · "+esc(it.method):""}</div></div>
+     <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${esc(it.desc||"")}</div></div>
      ${ss!=="attivo"?`<span class="pill ${ss==="pausa"?"st-due":"st-future"}">${pillTxt}</span>`:""}</div>
    <div class="ic-price">${money(it.amount,c)}<small> / ${it.freq==="custom"?"ogni "+(it.customDays||30)+" giorni":f.short}</small></div>
    <div class="kv">
@@ -1059,9 +1059,7 @@ function vPayments(){
     <div class="field"><label for="pf_from">Dal</label><input type="date" id="pf_from" data-pf="from" value="${f.from}"></div>
     <div class="field"><label for="pf_to">Al</label><input type="date" id="pf_to" data-pf="to" value="${f.to}"></div>
     <div class="field"><label for="pf_kind">Tipo</label><select id="pf_kind" data-pf="kind"><option value="">Tutti</option>${opt(Object.keys(KIND).map(k=>[k,KIND[k].l]),f.kind)}</select></div>
-    <div class="field"><label for="pf_cat">Categoria</label><select id="pf_cat" data-pf="cat"><option value="">Tutte</option>${opt(allCats().map(c=>[c,c]),f.cat)}</select></div>
     <div class="field"><label for="pf_status">Stato</label><select id="pf_status" data-pf="status"><option value="">Tutti</option>${opt(Object.keys(STATUS).map(k=>[k,STATUS[k]]),f.status)}</select></div>
-    <div class="field"><label for="pf_method">Metodo</label><select id="pf_method" data-pf="method"><option value="">Tutti</option>${opt(S.methods.map(c=>[c,c]),f.method)}</select></div>
     <div class="field"><label for="pf_min">Importo min</label><input type="number" id="pf_min" data-pf="min" value="${f.min}" min="0" step="0.01" inputmode="decimal"></div>
     <div class="field"><label for="pf_max">Importo max</label><input type="number" id="pf_max" data-pf="max" value="${f.max}" min="0" step="0.01" inputmode="decimal"></div>
     </div><div style="margin-top:12px"><button class="btn sm ghost" data-act="resetFilters">Azzera filtri</button></div></div>`:""}
@@ -1072,7 +1070,7 @@ function prow(o){
   const p=parse(o.date);const sv=o.status==="paid"?"paid":o.status==="late"?"late":"unpaid";
   const cls=o.status==="paid"?"st-paid":o.status==="late"||o.status==="overdue"?"st-overdue":o.status==="due"?"st-due":"st-future";
   return `<div class="prow"><span class="dbox st-${o.status}"><b>${p.d}</b><span>${MSHORT[p.m-1]}</span></span>
-   <button class="open" data-act="occ" data-key="${esc(o.key)}"><span class="rname" style="display:block">${o.emoji?o.emoji+" ":""}${esc(o.name)}</span><span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${esc(o.category||"")}${o.method?" · "+esc(o.method):""}${o.status==="overdue"?' · <b style="color:var(--s-over)">scaduto</b>':o.status==="due"?' · <b style="color:var(--s-due)">'+rel(o.date)+"</b>":""}</span></button>
+   <button class="open" data-act="occ" data-key="${esc(o.key)}"><span class="rname" style="display:block">${o.emoji?o.emoji+" ":""}${esc(o.name)}</span><span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${o.status==="overdue"?'<b style="color:var(--s-over)">scaduto</b>':o.status==="due"?'<b style="color:var(--s-due)">'+rel(o.date)+"</b>":""}</span></button>
    <span class="amt">${money(o.amount,o.currency)}</span>
    <span class="sel-wrap"><select class="status ${cls}" data-key="${esc(o.key)}" data-change="status" aria-label="Stato di ${esc(o.name)} del ${fmtDate(o.date)}" ${o.orphan?"disabled":""}>
      <option value="paid" ${sv==="paid"?"selected":""}>Pagato</option><option value="unpaid" ${sv==="unpaid"?"selected":""}>Non pagato</option><option value="late" ${sv==="late"?"selected":""}>In ritardo</option></select></span></div>`;
@@ -1097,7 +1095,7 @@ function vAnalysis(){
   const rates=activeRate();const rataM=rates.reduce((s,it)=>s+monthlyEq(it),0);const resid=S.items.filter(isRata).reduce((s,it)=>s+rataStats(it).restAmt,0);
   const f6=sum(compute().occ.filter(o=>unpaid(o)&&o.date>=TODAY&&o.date<addMonths(TODAY,6)));
   const f12=sum(compute().occ.filter(o=>unpaid(o)&&o.date>=TODAY&&o.date<addMonths(TODAY,12)));
-  const cats={};for(const it of S.items){if(inactive(it)||(isRata(it)&&rataStats(it).restN===0))continue;cats[it.category||"Altro"]=(cats[it.category||"Altro"]||0)+monthlyEq(it)}
+  const cats={};for(const it of S.items){if(inactive(it)||(isRata(it)&&rataStats(it).restN===0))continue;cats[it.name||"Senza nome"]=(cats[it.name||"Senza nome"]||0)+monthlyEq(it)}
   const catArr=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const catMax=catArr.length?catArr[0][1]:1;
   return `<div class="panel"><div class="panel-h"><h2>Impegni mese per mese</h2><span class="muted" style="font-size:13px">ultimi 5 mesi e prossimi 12</span></div>
     <div class="legend" style="margin-bottom:10px"><span><i style="background:var(--c-rata)"></i>Rate</span><span><i style="background:var(--c-sub)"></i>Subscription</span><span><i style="background:var(--c-altro)"></i>Altre spese</span><span class="muted">I mesi futuri sono una previsione</span></div>
@@ -1111,14 +1109,14 @@ function vAnalysis(){
     <div class="panel"><div class="panel-h"><h2>Rate</h2></div>
       <div class="bigstat"><span>Rate mensili</span><b>${money(rataM)}</b></div>
       <div class="bigstat"><span>Debito residuo complessivo</span><b>${money(resid)}</b></div>
-      <div class="bigstat"><span>Finanziamenti attivi</span><b>${rates.length}</b></div></div>
+      <div class="bigstat"><span>Rate attive</span><b>${rates.length}</b></div></div>
   </div>
   <div class="grid-2" style="align-items:start">
     <div class="panel"><div class="panel-h"><h2>Previsione</h2></div>
       <div class="bigstat"><span>Prossimi 6 mesi</span><b>${money(f6)}</b></div>
       <div class="bigstat"><span>Prossimi 12 mesi</span><b>${money(f12)}</b></div>
       <div class="bigstat"><span>Media mensile prevista (12 mesi)</span><b>${money(f12/12)}</b></div></div>
-    <div class="panel"><div class="panel-h"><h2>Per categoria</h2><span class="muted" style="font-size:13px">al mese</span></div>
+    <div class="panel"><div class="panel-h"><h2>Per voce</h2><span class="muted" style="font-size:13px">al mese</span></div>
       ${catArr.length?catArr.map(([c,v])=>`<div class="catrow"><span class="rname">${esc(c)}</span><div class="bar"><i style="width:${(v/catMax*100).toFixed(1)}%"></i></div><b class="num">${money(v)}</b></div>`).join(""):`<p class="muted">Nessun dato.</p>`}</div>
   </div>`;
 }
@@ -1252,8 +1250,8 @@ function openOcc(key){
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap"><div class="detail-amt">${money(o.amount,o.currency)}</div><span class="pill st-${o.status}">${STATUS[o.status]}</span></div>
     <div class="dlist">
       <div><span>Data</span><b>${fmtDate(o.date,{year:true})}</b></div><div><span>Quando</span><b>${rel(o.date)}</b></div>
-      <div><span>Tipo</span><b>${KIND[o.kind]?KIND[o.kind].l:""}${extra?" · "+extra:""}</b></div><div><span>Categoria</span><b>${esc(o.category||"—")}</b></div>
-      <div><span>Metodo di pagamento</span><b>${esc(o.method||"—")}</b></div><div><span>Registrato</span><b>${o.rec&&o.rec.paidOn?"pagato il "+fmtDate(o.rec.paidOn):o.implicit&&o.status==="paid"?"pagato prima dell'inserimento":"—"}</b></div>
+      <div><span>Tipo</span><b>${KIND[o.kind]?KIND[o.kind].l:""}${extra?" · "+extra:""}</b></div>
+      <div><span>Registrato</span><b>${o.rec&&o.rec.paidOn?"pagato il "+fmtDate(o.rec.paidOn):o.implicit&&o.status==="paid"?"pagato prima dell'inserimento":"—"}</b></div>
       ${o.notes?`<div class="full"><span>Note</span><b style="font-weight:500">${esc(o.notes)}</b></div>`:""}
       ${o.orphan?`<div class="full"><span>Storico</span><b style="font-weight:500">Pagamento registrato prima di una modifica: resta nello storico.</b></div>`:""}
     </div></div>
