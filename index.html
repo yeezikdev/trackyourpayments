@@ -1219,7 +1219,7 @@ function donut(parts){
 
 /* ================= IMPOSTAZIONI ================= */
 function vSettings(){
-  const s=S.settings;const hasDemo=S.items.some(i=>i.demo);
+  const s=S.settings;
   const opts=(arr,v)=>arr.map(([k,l])=>`<option value="${k}" ${String(v)===String(k)?"selected":""}>${l}</option>`).join("");
   return `<div class="panel"><div class="panel-h"><h2>Generali</h2></div>
     <div class="set-row"><div class="lbl"><b>Account</b><span>${store.email?esc(store.email):"Non collegato"}${store.mode==="cloud"?" · dati salvati nel tuo account":""}</span></div><button class="btn" data-act="logout">Esci</button></div>
@@ -1229,20 +1229,12 @@ function vSettings(){
   <div class="panel"><div class="panel-h"><h2>Notifiche</h2></div>
     <div class="set-row"><div class="lbl"><b>Promemoria</b><span>Mostra i pagamenti in arrivo nella campanella e gli avvisi nella dashboard</span></div><label class="switch"><input type="checkbox" id="set_notif" data-set="notif" ${s.notif?"checked":""} aria-label="Promemoria attivi"><span></span></label></div>
     <div class="set-row"><div class="lbl"><b>Anticipo predefinito</b><span>Per i nuovi pagamenti; ogni pagamento può avere il suo</span></div><select id="set_rem" data-set="remindDefault" aria-label="Anticipo promemoria">${opts([[0,"Nessun promemoria"],[1,"1 giorno prima"],[3,"3 giorni prima"],[7,"7 giorni prima"]],s.remindDefault)}</select></div></div>
-  <div class="panel"><div class="panel-h"><h2>Categorie</h2></div>
-    <div class="tags">${DEFAULT_CATS.map(c=>`<span class="tag fixed">${esc(c)}</span>`).join("")}${S.customCats.map((c,i)=>`<span class="tag">${esc(c)}<button data-act="delCat" data-i="${i}" aria-label="Rimuovi ${esc(c)}">${ico("x")}</button></span>`).join("")}</div>
-    <form class="inline-add" data-form="cat"><input type="text" id="newCat" placeholder="Nuova categoria" maxlength="30" aria-label="Nuova categoria"><button class="btn" type="submit">Aggiungi</button></form></div>
-  <div class="panel"><div class="panel-h"><h2>Metodi di pagamento</h2></div>
-    <p class="muted" style="margin:0 0 10px;font-size:13px">Salva solo un'etichetta (es. “Visa personale”). Non inserire mai numeri di carta, CVV, IBAN o password.</p>
-    <div class="tags">${S.methods.map((c,i)=>`<span class="tag">${esc(c)}<button data-act="delMethod" data-i="${i}" aria-label="Rimuovi ${esc(c)}">${ico("x")}</button></span>`).join("")}</div>
-    <form class="inline-add" data-form="method"><input type="text" id="newMethod" placeholder="Es. Visa personale" maxlength="30" aria-label="Nuovo metodo"><button class="btn" type="submit">Aggiungi</button></form></div>
   <div class="panel"><div class="panel-h"><h2>Backup ed esportazione</h2></div>
     <div class="set-row"><div class="lbl"><b>Backup completo (JSON)</b><span>Tutti i dati, storico incluso. Ripristinabile.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="exportJSON">${ico("down")} Esporta</button><button class="btn" data-act="importJSON">${ico("up")} Ripristina</button></div></div>
     <div class="set-row"><div class="lbl"><b>Pagamenti (CSV)</b><span>Storico e scadenze future, apribile con Excel o Numbers</span></div><button class="btn" data-act="exportCSV">${ico("down")} Esporta CSV</button></div>
     <div class="set-row"><div class="lbl"><b>Rate e subscription (CSV)</b><span>Esporta l'elenco o importane uno con le stesse colonne</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="exportItemsCSV">${ico("down")} Esporta</button><button class="btn" data-act="importCSV">${ico("up")} Importa CSV</button></div></div>
-    <div class="set-row"><div class="lbl"><b>Dove sono salvati i dati</b><span>${store.mode==="cloud"?"Nel tuo account Claude, privati: solo tu li vedi. Le modifiche arrivano subito sugli altri dispositivi aperti.":"In questo browser. Esporta un backup regolarmente."}</span></div><span class="pill ${store.mode==="cloud"?"st-paid":"st-future"}">${store.mode==="cloud"?"Account":"Dispositivo"}</span></div></div>
+    <div class="set-row"><div class="lbl"><b>Dove sono salvati i dati</b><span>${store.mode==="cloud"?"Nel tuo account, privati: solo tu li vedi. Le modifiche arrivano subito sugli altri dispositivi aperti.":"In questo browser. Esporta un backup regolarmente."}</span></div><span class="pill ${store.mode==="cloud"?"st-paid":"st-future"}">${store.mode==="cloud"?"Account":"Dispositivo"}</span></div></div>
   <div class="panel"><div class="panel-h"><h2>Dati</h2></div>
-    ${hasDemo?`<div class="set-row"><div class="lbl"><b>Dati di esempio</b><span>iPhone, auto, PC, Netflix e gli altri elementi dimostrativi</span></div><button class="btn danger" data-act="delDemo">${ico("trash")} Elimina dati demo</button></div>`:`<div class="set-row"><div class="lbl"><b>Dati di esempio</b><span>Carica elementi dimostrativi per provare l'app</span></div><button class="btn" data-act="loadDemo">Carica demo</button></div>`}
     <div class="set-row"><div class="lbl"><b>Cancella tutto</b><span>Rimuove ogni rata, subscription e pagamento registrato</span></div><button class="btn danger" data-act="resetAll">${ico("trash")} Cancella tutto</button></div></div>`;
 }
 
