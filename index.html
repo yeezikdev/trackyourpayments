@@ -382,32 +382,86 @@ table.inc input{height:34px;max-width:130px;text-align:right;font-variant-numeri
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-.auth{position:fixed;inset:0;z-index:200;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+.auth{position:fixed;inset:0;z-index:200;background:var(--bg);overflow:auto;font-family:var(--f-body);color:var(--ink);display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
 .auth[hidden]{display:none}
-.auth-box{width:100%;max-width:390px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:14px;font-family:var(--f-body);color:var(--ink)}
-.auth-logo{width:44px;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:22px}
-.auth-box h1{font-family:var(--f-display);font-size:27px;line-height:1.15;margin:4px 0 0;letter-spacing:-.02em}
-.auth-box p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
-.auth-box label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--ink-2)}
-.auth-box input{height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 13px;width:100%;font:inherit;font-size:16px;color:var(--ink);outline:none}
-.auth-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.auth-box .btn{height:46px;margin:0}
-.auth-msg{min-height:18px;font-size:13px;margin:0}
+.auth-art{position:relative;overflow:hidden;background:#2C47D3;color:#fff;padding:40px 48px;display:flex;flex-direction:column;justify-content:space-between;gap:40px;min-height:100vh}
+.auth-art::after{content:"";position:absolute;right:-140px;bottom:-140px;width:420px;height:420px;border-radius:50%;border:70px solid rgba(255,255,255,.06);pointer-events:none}
+.auth-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+.auth-logo{width:36px;height:36px;border-radius:10px;background:#fff;color:#2C47D3;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:19px;flex:none}
+.auth-art h2{font-family:var(--f-display);font-weight:600;font-size:clamp(32px,3.6vw,48px);line-height:1.05;letter-spacing:-.03em;margin:0;max-width:13ch}
+.auth-art p{margin:14px 0 0;color:rgba(255,255,255,.75);font-size:15.5px;line-height:1.55;max-width:36ch}
+.auth-list{display:flex;flex-direction:column;gap:10px;max-width:400px;position:relative;z-index:1}
+.auth-item{display:flex;align-items:center;gap:13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:11px 14px}
+.auth-item:nth-child(2){margin-left:26px}
+.auth-item:nth-child(3){margin-left:52px;opacity:.75}
+.auth-day{width:42px;height:44px;border-radius:11px;background:#fff;color:#2C47D3;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;flex:none}
+.auth-day b{font-family:var(--f-display);font-size:17px}
+.auth-day small{font-size:10px;margin-top:3px;font-weight:600;color:#5A6BD8}
+.auth-item .t{flex:1;min-width:0}
+.auth-item .t b{display:block;font-size:14.5px;font-weight:600}
+.auth-item .t span{font-size:12.5px;color:rgba(255,255,255,.7)}
+.auth-item .a{font-weight:600;font-size:14.5px;white-space:nowrap}
+
+.auth-main{position:relative;z-index:1;display:grid;place-items:center;padding:40px 24px}
+.auth-box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.auth-box h1{font-family:var(--f-display);font-size:30px;line-height:1.1;margin:0;letter-spacing:-.025em;font-weight:600}
+.auth-box .sub{margin:-6px 0 6px;color:var(--muted);font-size:14.5px;line-height:1.5}
+.auth-box label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.auth-field{position:relative}
+.auth-box input{height:48px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;width:100%;font:inherit;font-size:16px;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+.auth-box input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.auth-field input{padding-right:84px}
+.auth-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);height:36px;padding:0 12px;border:0;border-radius:9px;background:none;color:var(--accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.auth-eye:hover{background:var(--accent-soft)}
+.auth-box .btn{height:48px;margin:0;font-size:15px;border-radius:12px}
+.auth-switch{margin:2px 0 0;text-align:center;font-size:14px;color:var(--muted)}
+.auth-switch button{background:none;border:0;padding:0;font:inherit;font-weight:600;color:var(--accent);cursor:pointer}
+.auth-switch button:hover{text-decoration:underline}
+.auth-msg{font-size:13.5px;margin:0;line-height:1.45}
+.auth-msg:empty{display:none}
 .auth-msg.err{color:var(--s-over)} .auth-msg.ok{color:var(--s-paid)}
+.auth-note{font-size:12.5px;color:var(--muted);margin:6px 0 0;display:flex;gap:8px;align-items:flex-start;line-height:1.45}
+.auth-note svg{flex:none;margin-top:1px}
+
+@media (max-width:860px){
+  .auth{grid-template-columns:1fr;align-content:start}
+  .auth-art{min-height:0;padding:calc(22px + env(safe-area-inset-top)) 22px 34px;gap:26px}
+  .auth-art::after{width:260px;height:260px;right:-110px;bottom:-120px;border-width:46px}
+  .auth-art h2{font-size:32px}
+  .auth-art p{font-size:14.5px;margin-top:10px}
+  .auth-item:nth-child(n+2){display:none}
+  .auth-main{place-items:start center;padding:0 16px calc(28px + env(safe-area-inset-bottom));margin-top:-18px}
+  .auth-box{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px 20px;max-width:460px}
+  .auth-box h1{font-size:25px}
+}
 </style>
 </head>
 <body>
 <div class="auth" id="auth" hidden>
-  <form class="auth-box" id="authForm" novalidate>
-    <div class="auth-logo" aria-hidden="true">T</div>
-    <h1>Track your payments</h1>
-    <p>Accedi per ritrovare rate, subscription e scadenze su telefono e computer.</p>
-    <label>Email<input type="email" id="authEmail" autocomplete="email" required></label>
-    <label>Password<input type="password" id="authPass" autocomplete="current-password" minlength="6" required></label>
-    <button class="btn primary wide" type="submit" id="authIn">Accedi</button>
-    <button class="btn ghost wide" type="button" id="authUp">Crea account</button>
-    <p class="auth-msg" id="authMsg" role="status"></p>
-  </form>
+  <aside class="auth-art" aria-hidden="true">
+    <div class="auth-brand"><span class="auth-logo">T</span>Track your payments</div>
+    <div>
+      <h2>Ogni rata e ogni rinnovo, al suo posto.</h2>
+      <p>Scadenze, subscription ed entrate del mese in un'unica app, sincronizzata tra telefono e computer.</p>
+    </div>
+    <div class="auth-list">
+      <div class="auth-item"><div class="auth-day"><b>15</b><small>nov</small></div><div class="t"><b>iPhone</b><span>Rata 9 di 24</span></div><div class="a">75,00 €</div></div>
+      <div class="auth-item"><div class="auth-day"><b>22</b><small>nov</small></div><div class="t"><b>Spotify</b><span>Rinnovo mensile</span></div><div class="a">10,99 €</div></div>
+      <div class="auth-item"><div class="auth-day"><b>28</b><small>nov</small></div><div class="t"><b>Assicurazione auto</b><span>Ogni tre mesi</span></div><div class="a">145,00 €</div></div>
+    </div>
+  </aside>
+  <main class="auth-main">
+    <form class="auth-box" id="authForm" novalidate>
+      <h1 id="authTitle">Bentornato</h1>
+      <p class="sub" id="authSub">Accedi per vedere le tue scadenze.</p>
+      <label>Email<input type="email" id="authEmail" autocomplete="email" inputmode="email" placeholder="nome@email.com" required></label>
+      <label>Password<span class="auth-field"><input type="password" id="authPass" autocomplete="current-password" minlength="6" placeholder="Almeno 6 caratteri" required><button type="button" class="auth-eye" id="authEye" aria-label="Mostra password">Mostra</button></span></label>
+      <p class="auth-msg" id="authMsg" role="status"></p>
+      <button class="btn primary wide" type="submit" id="authIn">Accedi</button>
+      <p class="auth-switch"><span id="authSwitchTxt">Non hai un account?</span> <button type="button" id="authUp">Creane uno</button></p>
+      <p class="auth-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>I tuoi dati sono visibili solo a te.</p>
+    </form>
+  </main>
 </div>
 
 <div class="app" id="app">
@@ -548,15 +602,26 @@ async function startAuth(){
   const go=async up=>{
     const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPass").value;
     if(!email||password.length<6){say("Inserisci la tua email e una password di almeno 6 caratteri.","err");return}
-    say("Un momento…");
+    say("");const btn=document.getElementById("authIn"),lbl=btn.textContent;btn.disabled=true;btn.textContent="Un momento…";
     const{data,error}=up?await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}})
                         :await sb.auth.signInWithPassword({email,password});
-    if(error){say(error.message==="Invalid login credentials"?"Email o password non corrette.":error.message,"err");return}
-    if(up&&!data.session){say("Account creato. Conferma dal link che ti abbiamo mandato via email, poi accedi.","ok");return}
+    btn.disabled=false;btn.textContent=lbl;
+    if(error){say(error.message==="Invalid login credentials"?"Email o password non corrette. Riprova.":error.message==="User already registered"?"Esiste già un account con questa email: accedi.":error.message,"err");return}
+    if(up&&!data.session){setMode(false);say("Account creato. Apri il link che ti abbiamo mandato via email, poi accedi.","ok");return}
     say("");enter(data.user);
   };
-  document.getElementById("authForm").addEventListener("submit",e=>{e.preventDefault();e.stopPropagation();go(false)});
-  document.getElementById("authUp").addEventListener("click",()=>go(true));
+  let signup=false;
+  const setMode=up=>{signup=up;say("");
+    document.getElementById("authTitle").textContent=up?"Crea il tuo account":"Bentornato";
+    document.getElementById("authSub").textContent=up?"Ti servono solo email e password.":"Accedi per vedere le tue scadenze.";
+    document.getElementById("authIn").textContent=up?"Crea account":"Accedi";
+    document.getElementById("authSwitchTxt").textContent=up?"Hai già un account?":"Non hai un account?";
+    document.getElementById("authUp").textContent=up?"Accedi":"Creane uno";
+    document.getElementById("authPass").setAttribute("autocomplete",up?"new-password":"current-password")};
+  document.getElementById("authForm").addEventListener("submit",e=>{e.preventDefault();e.stopPropagation();go(signup)});
+  document.getElementById("authUp").addEventListener("click",()=>setMode(!signup));
+  document.getElementById("authEye").addEventListener("click",e=>{const i=document.getElementById("authPass"),show=i.type==="password";
+    i.type=show?"text":"password";e.currentTarget.textContent=show?"Nascondi":"Mostra";e.currentTarget.setAttribute("aria-label",show?"Nascondi password":"Mostra password")});
   let session=null;try{session=(await sb.auth.getSession()).data.session}catch(e){}
   if(session)enter(session.user);else{box.hidden=false;document.getElementById("authEmail").focus()}
 }
