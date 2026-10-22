@@ -124,14 +124,77 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 60px}
   .kpis{grid-template-columns:1fr 1fr}
   .grid2{grid-template-columns:1fr}
 }
+.ti{display:none}
+.row.click:hover{background:rgba(255,255,255,.02)}
+.row-btns .left{margin-right:auto}
+.mpick{display:flex;align-items:center;gap:4px}
+.mpick button{background:var(--card2);border:1px solid var(--line);border-radius:10px;width:40px;height:42px;cursor:pointer;flex:none}
+.mpick input{margin:0;width:auto;min-width:170px;text-align:center;font-weight:600;color-scheme:dark}
+.amt{white-space:nowrap}
+
+/* ======== SMARTPHONE ======== */
 @media(max-width:600px){
-  .brand{font-size:14px}
-  .month span{min-width:104px;font-size:14px}
+  html,body{font-size:15px;-webkit-tap-highlight-color:transparent}
+  input,select{font-size:16px}                 /* evita lo zoom automatico su iPhone */
+  .top{padding:calc(8px + env(safe-area-inset-top)) 12px 8px;backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+  .bfull{display:none}
+  .brand{font-size:22px}
+  .month{margin-left:0;flex:1;justify-content:center}
+  .month button{width:38px;height:38px}
+  .month span{min-width:0;flex:1;max-width:160px;font-size:15px}
+  .ghost{padding:8px 10px}
+
+  /* barra sezioni in basso */
+  .tabs{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:15;display:grid;grid-template-columns:repeat(5,1fr);gap:0;
+        background:rgba(15,17,21,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+        padding:6px 4px calc(6px + env(safe-area-inset-bottom));max-width:none;overflow:visible}
+  .tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;border:0;border-radius:10px;font-size:10.5px;font-weight:600}
+  .tabs button.active{background:var(--card2);color:var(--text)}
+  .ti{display:block;font-size:19px;line-height:1.1}
+  .tl{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  main{padding:12px 12px calc(96px + env(safe-area-inset-bottom))}
+
+  .card{padding:14px;border-radius:12px}
+  .kpis{gap:8px;margin-bottom:10px}
+  .kpi{padding:12px}
+  .kpi span{font-size:11px}
   .kpi b{font-size:18px}
   .info-row{grid-template-columns:1fr}
-  .cell{min-height:52px;padding:3px}
-  .chip{font-size:0;padding:0;width:9px;height:9px;border-radius:50%;display:inline-block}
-  .cell .chips{display:flex;flex-wrap:wrap;gap:3px}
+  .grid2{gap:10px}
+  .chart{height:220px}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .summary b{font-size:16px}
+
+  .toolbar{gap:8px}
+  .toolbar .btn{flex:1;padding:12px}
+  .toolbar select{width:100%;margin:0}
+  .mpick{width:100%}
+  .mpick input{flex:1;min-width:0}
+
+  /* righe: tocca la riga per modificare */
+  .row{padding:12px 0;gap:10px}
+  .row .icon{display:none}
+  .row .tag{display:none}
+  .amt{font-size:15px}
+
+  .rata-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px}
+  .icon{padding:8px 10px;font-size:16px}
+
+  /* calendario compatto */
+  .cal{gap:3px}
+  .cal .wd{font-size:11px}
+  .cell{min-height:48px;padding:3px;border-radius:6px}
+  .chip{font-size:0;padding:0;width:12px;height:12px;border-radius:50%;display:inline-block}
+  .cell .chips{display:flex;flex-wrap:wrap;gap:4px}
+
+  /* finestre che salgono dal basso */
+  .modal{align-items:flex-end;padding:0}
+  .sheet{max-width:none;border-radius:20px 20px 0 0;max-height:88vh;padding:18px 16px calc(18px + env(safe-area-inset-bottom));border-bottom:0}
+  .row-btns .btn{flex:1;padding:13px}
+  .row-btns .left{margin-right:0}
+  .two{grid-template-columns:1fr}
+
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
@@ -166,7 +229,7 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 60px}
 <div id="app" class="hidden">
   <header class="top">
     <div class="top-row">
-      <div class="brand">💸 Track your payments</div>
+      <div class="brand">💸<span class="bfull"> Track your payments</span></div>
       <div class="month">
         <button data-act="prev" aria-label="Mese precedente">‹</button>
         <span id="month-label" data-act="today" title="Torna al mese corrente"></span>
@@ -175,11 +238,11 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 60px}
       <button class="ghost" data-act="logout">Esci</button>
     </div>
     <nav class="tabs" id="tabs">
-      <button data-act="tab" data-tab="panoramica">Panoramica</button>
-      <button data-act="tab" data-tab="movimenti">Movimenti</button>
-      <button data-act="tab" data-tab="rate">Rate</button>
-      <button data-act="tab" data-tab="abbonamenti">Abbonamenti</button>
-      <button data-act="tab" data-tab="calendario">Calendario</button>
+      <button data-act="tab" data-tab="panoramica"><span class="ti">📊</span><span class="tl">Panoramica</span></button>
+      <button data-act="tab" data-tab="movimenti"><span class="ti">💶</span><span class="tl">Movimenti</span></button>
+      <button data-act="tab" data-tab="rate"><span class="ti">🧾</span><span class="tl">Rate</span></button>
+      <button data-act="tab" data-tab="abbonamenti"><span class="ti">🔁</span><span class="tl">Abbonamenti</span></button>
+      <button data-act="tab" data-tab="calendario"><span class="ti">📅</span><span class="tl">Calendario</span></button>
     </nav>
   </header>
   <main id="view"></main>
@@ -241,13 +304,14 @@ function closeModal(){ $('#modal').classList.add('hidden'); $('#m-body').innerHT
 async function q(p){ const {data, error} = await p; if(error) throw error; return data; }
 
 function fieldHtml(f){
+  if(f.type === 'html') return f.html;
   const v = f.value ?? '';
   if(f.type === 'select')
     return `<label>${f.label}<select name="${f.name}">${f.options.map(o=>`<option value="${esc(o[0])}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></label>`;
   return `<label>${f.label}<input name="${f.name}" type="${f.type||'text'}" value="${esc(v)}" ${f.list?`list="${f.list}"`:''} ${f.attrs||''}></label>`;
 }
-function formModal(title, fields, onSave){
-  openModal(title, `<form id="mf">${fields.map(fieldHtml).join('')}<div class="row-btns"><button class="btn" type="button" data-act="close">Annulla</button><button class="btn primary" type="submit">Salva</button></div></form>`);
+function formModal(title, fields, onSave, extraBtns = ''){
+  openModal(title, `<form id="mf">${fields.map(fieldHtml).join('')}<div class="row-btns">${extraBtns}<button class="btn" type="button" data-act="close">Annulla</button><button class="btn primary" type="submit">Salva</button></div></form>`);
   $('#mf').onsubmit = async e => {
     e.preventDefault();
     const btn = e.submitter; btn.disabled = true;
@@ -338,7 +402,7 @@ function occurrences(y, m){
     if(n < 0 || n >= r.num_rate) continue;
     const date = rataDate(r, n);
     const tx = S.mov.find(t => t.rata_id === r.id && t.scadenza === date);
-    const pre = n < (r.rate_gia_pagate || 0);
+    const pre = date <= today;                     // scadenza passata (o oggi) = pagata
     out.push({ kind:'rata', ref:r, date, importo:r.importo_rata, nome:r.nome, sub:`Rata ${n+1}/${r.num_rate}`, tx, pre, paid:!!tx || pre, overdue:!tx && !pre && date < today });
   }
   for(const a of S.abb){
@@ -352,7 +416,7 @@ function rataStats(r){
   let paid = 0, next = null;
   for(let n = 0; n < r.num_rate; n++){
     const d = rataDate(r, n);
-    const ok = n < (r.rate_gia_pagate || 0) || S.mov.some(t => t.rata_id === r.id && t.scadenza === d);
+    const ok = d <= todayISO() || S.mov.some(t => t.rata_id === r.id && t.scadenza === d);
     if(ok) paid++; else if(!next) next = { d, n:n+1 };
   }
   return { paid, next, residuo:(r.num_rate - paid) * r.importo_rata, fine:rataDate(r, r.num_rate - 1) };
@@ -451,7 +515,7 @@ function drawCharts(){
     const tot = sum(ent.map(e => e[1]));
     charts.cat = new Chart(cv, { type:'doughnut', data:{ labels:ent.map(e => e[0]), datasets:[{ data:ent.map(e => +e[1].toFixed(2)), backgroundColor:ent.map((_, i) => pal[i % pal.length]), borderWidth:0 }] },
       options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
-        plugins:{ legend:{ position:'right', labels:{ boxWidth:10, boxHeight:10 } },
+        plugins:{ legend:{ position: innerWidth < 600 ? 'bottom' : 'right', labels:{ boxWidth:10, boxHeight:10 } },
           tooltip:{ callbacks:{ label:c => `${c.label}: ${eur(c.parsed)} (${(c.parsed/tot*100).toFixed(1)}%)` } } } } });
   }
 }
@@ -462,6 +526,13 @@ function vMovimenti(){
   const list = S.mov.filter(x => x.data.startsWith(p) && (movFilter === 'tutti' || x.tipo === movFilter))
     .sort((a, b) => b.data.localeCompare(a.data) || (b.created_at || '').localeCompare(a.created_at || ''));
   return `
+  <div class="toolbar">
+    <div class="mpick">
+      <button data-act="prev" aria-label="Mese precedente">‹</button>
+      <input type="month" id="mov-month" value="${cur.y}-${pad(cur.m+1)}" aria-label="Seleziona il mese">
+      <button data-act="next" aria-label="Mese successivo">›</button>
+    </div>
+  </div>
   <div class="toolbar">
     <button class="btn green" data-act="add-mov" data-tipo="entrata">+ Entrata</button>
     <button class="btn red" data-act="add-mov" data-tipo="uscita">+ Uscita</button>
@@ -479,11 +550,11 @@ function vMovimenti(){
   </div>
   <div class="card">${list.length ? list.map(rowMov).join('') : `<p class="empty">Nessun movimento in ${MESI[cur.m]} ${cur.y}.</p>`}</div>`;
 }
-const rowMov = t => `<div class="row">
+const rowMov = t => `<div class="row click" data-act="edit-mov" data-id="${t.id}">
   <div class="dot ${t.tipo==='entrata'?'bg-green':'bg-red'}"></div>
   <div class="grow"><b>${esc(t.descrizione || t.categoria)}</b>
     <small class="muted">${fmtDate(t.data)} · ${esc(t.categoria)}${t.rata_id?' · 📅 rata':''}${t.abbonamento_id?' · 🔁 abbonamento':''}</small></div>
-  <b class="${t.tipo==='entrata'?'green':'red'}">${t.tipo==='entrata'?'+':'−'}${eur(t.importo)}</b>
+  <b class="amt ${t.tipo==='entrata'?'green':'red'}">${t.tipo==='entrata'?'+':'−'}${eur(t.importo)}</b>
   <button class="icon" data-act="edit-mov" data-id="${t.id}" title="Modifica">✎</button>
   <button class="icon" data-act="del-mov" data-id="${t.id}" title="Elimina">🗑</button></div>`;
 
@@ -499,7 +570,7 @@ function movForm(tipo, t = {}){
     const row = { tipo:fd.tipo, importo:+fd.importo, data:fd.data, categoria:fd.categoria.trim() || 'Altro', descrizione:fd.descrizione.trim() || null };
     if(t.id) await q(sb.from('movimenti').update(row).eq('id', t.id));
     else await q(sb.from('movimenti').insert(row));
-  });
+  }, t.id ? `<button class="btn red left" type="button" data-act="del-mov" data-id="${t.id}">Elimina</button>` : '');
 }
 
 // ---- Rate
@@ -521,29 +592,43 @@ function vRate(){
         <div style="white-space:nowrap"><button class="icon" data-act="edit-rata" data-id="${r.id}" title="Modifica">✎</button><button class="icon" data-act="del-rata" data-id="${r.id}" title="Elimina">🗑</button></div></div>
       <div class="bar big"><i class="${s.next?'bg-orange':'bg-green'}" style="width:${pct}%"></i></div>
       <div class="rata-stats">
-        <span><b>${s.paid}/${r.num_rate}</b> pagate</span>
+        <span>Pagate ad oggi <b>${s.paid}/${r.num_rate}</b></span>
+        <span>Restano <b>${r.num_rate - s.paid}</b> rate</span>
         <span>Residuo <b>${eur(s.residuo)}</b></span>
         <span>${s.next ? `Prossima (n.${s.next.n}): <b class="${s.next.d < today ? 'red' : ''}">${fmtDate(s.next.d, true)}</b>` : '<b class="green">✓ Completata</b>'}</span>
         <span>Ultima rata: <b>${fmtDate(s.fine, true)}</b></span>
       </div>${r.note ? `<p class="muted small" style="margin:10px 0 0">${esc(r.note)}</p>` : ''}</div>`;
   }).join('') : '<div class="card"><p class="empty">Nessun pagamento rateizzato. Aggiungine uno con il pulsante sopra.</p></div>'}
-  <p class="muted small">Per segnare una rata come pagata vai su <b>Calendario</b> e tocca la scadenza: verrà registrata automaticamente un'uscita.</p>`;
+  <p class="muted small">Le rate con scadenza passata (o di oggi) sono considerate pagate in automatico. Dal <b>Calendario</b> puoi toccare una rata per registrarla anche come uscita nei movimenti, oppure pagarne una in anticipo.</p>`;
 }
 function rataForm(r = {}){
   formModal(r.id ? 'Modifica rateizzazione' : 'Nuovo pagamento rateizzato', [
     { name:'nome', label:'Nome', value:r.nome, attrs:'required placeholder="es. iPhone, finanziamento auto…"' },
-    { name:'importo_rata', label:'Importo di ogni rata (€)', type:'number', value:r.importo_rata, attrs:'step="0.01" min="0.01" inputmode="decimal" required' },
-    { name:'num_rate', label:'Numero totale di rate', type:'number', value:r.num_rate, attrs:'step="1" min="1" required' },
+    { name:'totale', label:'Importo totale (€)', type:'number', value:r.id ? +(r.importo_rata * r.num_rate).toFixed(2) : '', attrs:'step="0.01" min="0.01" inputmode="decimal" required placeholder="es. 1200"' },
+    { name:'num_rate', label:'Numero di rate', type:'number', value:r.num_rate, attrs:'step="1" min="1" inputmode="numeric" required placeholder="es. 12"' },
     { name:'data_prima_rata', label:'Data della prima rata (le successive cadono lo stesso giorno di ogni mese)', type:'date', value:r.data_prima_rata || todayISO(), attrs:'required' },
-    { name:'rate_gia_pagate', label:'Rate già pagate prima di usare l\'app', type:'number', value:r.rate_gia_pagate ?? 0, attrs:'step="1" min="0"' },
+    { type:'html', html:'<div id="rata-preview" class="occ-info"></div>' },
     { name:'note', label:'Note', value:r.note, attrs:'placeholder="opzionale"' }
   ], async fd => {
-    const row = { nome:fd.nome.trim(), importo_rata:+fd.importo_rata, num_rate:parseInt(fd.num_rate), data_prima_rata:fd.data_prima_rata,
-      rate_gia_pagate:parseInt(fd.rate_gia_pagate || 0), note:fd.note.trim() || null };
-    if(row.rate_gia_pagate > row.num_rate) throw new Error('Le rate già pagate non possono superare il numero totale.');
+    const totale = +fd.totale, n = parseInt(fd.num_rate);
+    if(!(totale > 0) || !(n > 0)) throw new Error('Inserisci importo totale e numero di rate.');
+    const row = { nome:fd.nome.trim(), importo_rata:Math.round(totale / n * 100) / 100, num_rate:n, data_prima_rata:fd.data_prima_rata,
+      rate_gia_pagate:0, note:fd.note.trim() || null };
     if(r.id) await q(sb.from('rate').update(row).eq('id', r.id));
     else await q(sb.from('rate').insert(row));
-  });
+  }, r.id ? `<button class="btn red left" type="button" data-act="del-rata" data-id="${r.id}">Elimina</button>` : '');
+  const f = $('#mf'), upd = () => {
+    const tot = +f.totale.value, n = parseInt(f.num_rate.value), d = f.data_prima_rata.value, box = $('#rata-preview');
+    if(!(tot > 0) || !(n > 0) || !d){ box.innerHTML = '<span class="muted small">Inserisci totale, numero di rate e data per vedere il calcolo.</span>'; return; }
+    const tmp = { data_prima_rata:d, num_rate:n }, today = todayISO();
+    let pagate = 0, prossima = null;
+    for(let i = 0; i < n; i++){ const di = rataDate(tmp, i); if(di <= today) pagate++; else if(!prossima) prossima = di; }
+    const rata = Math.round(tot / n * 100) / 100;
+    box.innerHTML = `<div><span class="muted small">Importo di ogni rata</span><b style="font-size:20px">${eur(rata)}</b>
+      <small class="muted">Pagate ad oggi: <b class="green">${pagate}</b> · Restano: <b class="orange">${n - pagate}</b> (${eur(rata * (n - pagate))})</small>
+      <small class="muted">${prossima ? 'Prossima: ' + fmtDate(prossima, true) + ' · ' : ''}Ultima: ${fmtDate(rataDate(tmp, n - 1), true)}</small></div>`;
+  };
+  f.addEventListener('input', upd); upd();
 }
 
 // ---- Abbonamenti
@@ -559,11 +644,11 @@ function vAbbonamenti(){
   </div>
   <div class="card">${list.length ? list.map(a => {
     const on = abbAttivo(a), nx = on ? nextRenewal(a) : null;
-    return `<div class="row">
+    return `<div class="row click" data-act="edit-abb" data-id="${a.id}">
       <div class="dot ${on?'bg-purple':'bg-muted'}"></div>
       <div class="grow"><b>${esc(a.nome)}</b><small class="muted">${esc(a.categoria)} · il ${a.giorno_rinnovo} di ogni mese${nx ? ` · prossimo: ${fmtDate(nx)}` : ''}${!on ? ` · disdetto dal ${fmtDate(a.data_fine, true)}` : ''}</small></div>
       <span class="tag ${on?'ok':'off'}">${on?'Attivo':'Disdetto'}</span>
-      <b>${eur(a.importo)}</b>
+      <b class="amt">${eur(a.importo)}</b>
       <button class="icon" data-act="edit-abb" data-id="${a.id}" title="Modifica">✎</button>
       <button class="icon" data-act="toggle-abb" data-id="${a.id}" title="${on?'Disdici':'Riattiva'}">${on?'⏸':'▶'}</button>
       <button class="icon" data-act="del-abb" data-id="${a.id}" title="Elimina">🗑</button></div>`;
@@ -582,7 +667,8 @@ function abbForm(a = {}){
       categoria:fd.categoria.trim() || 'Abbonamenti', data_fine:fd.data_fine || null };
     if(a.id) await q(sb.from('abbonamenti').update(row).eq('id', a.id));
     else await q(sb.from('abbonamenti').insert(row));
-  });
+  }, a.id ? `<button class="btn red left" type="button" data-act="del-abb" data-id="${a.id}">Elimina</button>
+    <button class="btn" type="button" data-act="toggle-abb" data-id="${a.id}">${abbAttivo(a) ? '⏸ Disdici' : '▶ Riattiva'}</button>` : '');
 }
 
 // ---- Calendario
@@ -620,18 +706,16 @@ function vCalendario(){
 function occModal(o){
   let html = `<div class="occ-info"><div><span class="muted small">${o.kind === 'rata' ? 'Rata' : 'Abbonamento'}</span><b>${esc(o.nome)}</b>
     <small class="muted">${esc(o.sub)} · scadenza ${fmtDate(o.date, true)}</small></div><b>${eur(o.importo)}</b></div>`;
-  if(o.pre){
-    openModal('Scadenza', html + `<p class="muted">Conteggiata tra le rate già pagate prima di usare l'app. Per cambiarla modifica la rateizzazione.</p>`); return;
-  }
+  const preNote = o.pre ? `<p class="green" style="margin-top:0">✓ Considerata pagata: la scadenza è già passata.</p>` : '';
   if(o.tx){
     openModal('Scadenza', html + `<p class="green">✓ Pagata il ${fmtDate(o.tx.data, true)} (${eur(o.tx.importo)})</p>
-      <div class="row-btns"><button class="btn red" data-act="unpay" data-id="${o.tx.id}">Segna come non pagata</button></div>`); return;
+      <div class="row-btns"><button class="btn red" data-act="unpay" data-id="${o.tx.id}">${o.pre ? 'Rimuovi l\'uscita dai movimenti' : 'Segna come non pagata'}</button></div>`); return;
   }
-  openModal('Scadenza', html + `<form id="payf"><div class="two">
+  openModal('Scadenza', html + preNote + `<form id="payf"><div class="two">
       <label>Importo pagato (€)<input name="importo" type="number" step="0.01" min="0.01" value="${o.importo}" required></label>
       <label>Data pagamento<input name="data" type="date" value="${o.date}" required></label></div>
     <p class="muted small" style="margin-top:0">Verrà registrata un'uscita nei movimenti di quel mese.</p>
-    <div class="row-btns"><button class="btn" type="button" data-act="close">Annulla</button><button class="btn green" type="submit">✓ Segna come pagata</button></div></form>`);
+    <div class="row-btns"><button class="btn" type="button" data-act="close">Annulla</button><button class="btn green" type="submit">${o.pre ? 'Registra l\'uscita nei movimenti' : '✓ Segna come pagata'}</button></div></form>`);
   $('#payf').onsubmit = async e => {
     e.preventDefault(); const btn = e.submitter; btn.disabled = true;
     const fd = Object.fromEntries(new FormData(e.target));
@@ -663,22 +747,22 @@ document.addEventListener('click', async e => {
       case 'edit-mov': { const t = byId(S.mov, id); movForm(t.tipo, t); break; }
       case 'del-mov':
         if(!confirm('Eliminare questo movimento?')) return;
-        await q(sb.from('movimenti').delete().eq('id', id)); await refresh(); toast('Eliminato'); break;
+        await q(sb.from('movimenti').delete().eq('id', id)); closeModal(); await refresh(); toast('Eliminato'); break;
       case 'add-rata': rataForm(); break;
       case 'edit-rata': rataForm(byId(S.rate, id)); break;
       case 'del-rata':
         if(!confirm('Eliminare questa rateizzazione? I pagamenti già registrati resteranno tra i movimenti.')) return;
-        await q(sb.from('rate').delete().eq('id', id)); await refresh(); toast('Eliminata'); break;
+        await q(sb.from('rate').delete().eq('id', id)); closeModal(); await refresh(); toast('Eliminata'); break;
       case 'add-abb': abbForm(); break;
       case 'edit-abb': abbForm(byId(S.abb, id)); break;
       case 'toggle-abb': {
         const a = byId(S.abb, id), on = abbAttivo(a);
         if(on && !confirm(`Segnare ${a.nome} come disdetto da oggi?`)) return;
-        await q(sb.from('abbonamenti').update({ data_fine: on ? todayISO() : null }).eq('id', id)); await refresh(); toast(on ? 'Disdetto' : 'Riattivato'); break;
+        await q(sb.from('abbonamenti').update({ data_fine: on ? todayISO() : null }).eq('id', id)); closeModal(); await refresh(); toast(on ? 'Disdetto' : 'Riattivato'); break;
       }
       case 'del-abb':
         if(!confirm('Eliminare questo abbonamento? I pagamenti già registrati resteranno tra i movimenti.')) return;
-        await q(sb.from('abbonamenti').delete().eq('id', id)); await refresh(); toast('Eliminato'); break;
+        await q(sb.from('abbonamenti').delete().eq('id', id)); closeModal(); await refresh(); toast('Eliminato'); break;
       case 'occ': occModal(calOcc[+b.dataset.i]); break;
       case 'unpay':
         if(!confirm('Annullare il pagamento? L\'uscita collegata verrà eliminata.')) return;
@@ -686,7 +770,10 @@ document.addEventListener('click', async e => {
     }
   }catch(err){ toast(err.message || String(err), true); }
 });
-document.addEventListener('change', e => { if(e.target.id === 'mov-filter'){ movFilter = e.target.value; render(); } });
+document.addEventListener('change', e => {
+  if(e.target.id === 'mov-filter'){ movFilter = e.target.value; render(); }
+  if(e.target.id === 'mov-month' && e.target.value){ const [y, m] = e.target.value.split('-').map(Number); cur = { y, m:m-1 }; render(); }
+});
 $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
