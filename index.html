@@ -252,6 +252,8 @@ button.row:hover{background:var(--surface-2)}
 input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{height:40px;border-radius:11px;border:1px solid var(--line);background:var(--surface);padding:0 11px;width:100%;min-width:0}
 textarea{height:auto;min-height:72px;padding:9px 11px;resize:vertical}
 input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:0;border-color:var(--accent)}
+.today-mark{display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:8px 12px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:700}
+.today-mark small{margin-left:auto;font-weight:500;font-size:12px;opacity:.8}
 .month-h{display:flex;justify-content:space-between;align-items:baseline;padding:16px 8px 6px;font-size:13px;font-weight:700;color:var(--ink-2);text-transform:capitalize;border-bottom:1px solid var(--line)}
 .month-h span{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
 .prow{display:grid;grid-template-columns:62px minmax(0,1fr) auto 128px;gap:14px;align-items:center;padding:10px 8px;border-bottom:1px solid var(--line-2)}
@@ -548,7 +550,7 @@ function monthLabel(k){const[y,m]=k.split("-").map(Number);return `${MONTHS[m-1]
 /* ================= stato ================= */
 let S=null;              // stato persistito
 let C=null;              // cache calcolata
-const UI={incYear:+TODAY.slice(0,4),view:"dashboard",cal:{mode:"month",cursor:TODAY,sel:TODAY},subTab:"sub",pf:{tab:"tutti",q:"",from:addMonths(TODAY,-3),to:addMonths(TODAY,3),kind:"",cat:"",status:"",method:"",min:"",max:""},showFilters:false,search:"",searchOpen:false};
+const UI={incYear:+TODAY.slice(0,4),view:"dashboard",cal:{mode:"month",cursor:TODAY,sel:TODAY},subTab:"sub",pf:{tab:"tutti",q:"",from:"",to:addMonths(TODAY,6),kind:"",cat:"",status:"",method:"",min:"",max:""},showFilters:false,search:"",searchOpen:false};
 const store={mode:"local",ref:null,timer:null,downloads:null};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const cur=()=>S.settings.currency||"EUR";
@@ -849,6 +851,11 @@ function renderResults(){
    ${occ.length?`<div class="grp eyebrow">Scadenze</div>`+occ.map(o=>`<button class="res" data-act="occ" data-key="${esc(o.key)}"><span class="pill st-${o.status}">${fmtShort(o.date)}</span><span class="grow rname">${esc(o.name)}</span><span class="amt">${money(o.amount,o.currency)}</span></button>`).join(""):""}</div>`;
 }
 
+function jumpToday(){
+  requestAnimationFrame(()=>{const m=document.getElementById("todayMark");if(!m)return;
+    const top=document.querySelector(".top");const off=(top?top.getBoundingClientRect().height:0)+8;
+    window.scrollTo(0,Math.max(0,m.getBoundingClientRect().top+window.scrollY-off))});
+}
 function render(){
   compute();renderSide();renderTop();
   const v=document.getElementById("view");
@@ -1047,6 +1054,9 @@ function filteredPayments(){
 function vPayments(){
   const f=UI.pf;let list=filteredPayments();
   if(f.tab==="effettuati")list=list.slice().reverse();
+  const asc=f.tab==="tutti";const firstFut=asc?list.find(o=>o.date>=TODAY)||null:null;
+  const hasPast=asc&&list.some(o=>o.date<TODAY);
+  const todayMark=hasPast?`<div class="today-mark" id="todayMark"><span>Oggi, ${fmtDate(TODAY)}</span><small>Scorri in su per la cronologia</small></div>`:"";
   const groups={};const order=[];for(const o of list){const k=monthKey(o.date);if(!groups[k]){groups[k]=[];order.push(k)}groups[k].push(o)}
   const opt=(arr,val)=>arr.map(([v,l])=>`<option value="${esc(v)}" ${val===v?"selected":""}>${esc(l)}</option>`).join("");
   const tabs=[["tutti","Tutti"],["futuri","Futuri"],["effettuati","Effettuati"],["scaduti","Scaduti"]];
@@ -1064,7 +1074,7 @@ function vPayments(){
     <div class="field"><label for="pf_max">Importo max</label><input type="number" id="pf_max" data-pf="max" value="${f.max}" min="0" step="0.01" inputmode="decimal"></div>
     </div><div style="margin-top:12px"><button class="btn sm ghost" data-act="resetFilters">Azzera filtri</button></div></div>`:""}
   <div class="panel sumbar"><div><span>Pagamenti trovati</span><b>${list.length}</b></div><div><span>Totale</span><b>${money(sum(list))}</b></div><div><span>Pagati</span><b>${money(sum(list.filter(o=>o.status==="paid")))}</b></div><div><span>Da pagare</span><b>${money(sum(list.filter(unpaid)))}</b></div></div>
-  <div class="panel" style="padding-top:6px">${order.length?order.map(k=>`<div class="month-h"><span style="color:var(--ink-2)">${monthLabel(k)}</span><span>${money(sum(groups[k]))}</span></div>`+groups[k].map(prow).join("")).join(""):emptyBox("Nessun pagamento","Nessun pagamento corrisponde ai filtri selezionati.")}</div>`;
+  <div class="panel" style="padding-top:6px">${order.length?order.map(k=>(groups[k][0]===firstFut?todayMark:"")+`<div class="month-h"><span style="color:var(--ink-2)">${monthLabel(k)}</span><span>${money(sum(groups[k]))}</span></div>`+groups[k].map((o,i)=>(o===firstFut&&i>0?todayMark:"")+prow(o)).join("")).join("")+(asc&&!firstFut?todayMark:""):emptyBox("Nessun pagamento","Nessun pagamento corrisponde ai filtri selezionati.")}</div>`;
 }
 function prow(o){
   const p=parse(o.date);const sv=o.status==="paid"?"paid":o.status==="late"?"late":"unpaid";
@@ -1459,7 +1469,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
   if(a==="scrim"){if(e.target===b)closeModal();return}
   switch(a){
-    case"nav":UI.view=b.dataset.v;if(b.dataset.tab){UI.pf.tab=b.dataset.tab}closeModal();UI.search="";render();window.scrollTo(0,0);break;
+    case"nav":UI.view=b.dataset.v;if(b.dataset.tab){UI.pf.tab=b.dataset.tab}else if(UI.view==="payments"){UI.pf.tab="tutti"}closeModal();UI.search="";render();window.scrollTo(0,0);if(UI.view==="payments")jumpToday();break;
     case"add":openForm(b.dataset.kind||(UI.view==="rate"?"rata":"sub"));break;
     case"pickKind":openForm(b.dataset.v);break;
     case"edit":UI.search="";renderTop();openForm(null,b.dataset.id);break;
@@ -1481,9 +1491,9 @@ document.addEventListener("click",e=>{
     case"upRange":S.settings.upRange=b.dataset.v;commit();break;
     case"incMonth":if(e.target.closest("input"))return;openIncMonth(b.dataset.k);break;
     case"incYear":UI.incYear+=+b.dataset.v;render();break;
-    case"pTab":UI.pf.tab=b.dataset.v;render();break;
+    case"pTab":UI.pf.tab=b.dataset.v;render();if(b.dataset.v==="tutti")jumpToday();else window.scrollTo(0,0);break;
     case"toggleFilters":UI.showFilters=!UI.showFilters;render();break;
-    case"resetFilters":UI.pf=Object.assign(UI.pf,{q:"",from:addMonths(TODAY,-3),to:addMonths(TODAY,3),kind:"",cat:"",status:"",method:"",min:"",max:""});render();break;
+    case"resetFilters":UI.pf=Object.assign(UI.pf,{q:"",from:"",to:addMonths(TODAY,6),kind:"",cat:"",status:"",method:"",min:"",max:""});render();break;
     case"goPayments":UI.view="payments";UI.pf.tab="futuri";UI.pf.from=TODAY;UI.pf.to=addDays(TODAY,+b.dataset.days);render();window.scrollTo(0,0);break;
     case"delCat":S.customCats.splice(+b.dataset.i,1);commit("Categoria rimossa");break;
     case"delMethod":if(S.methods.length<=1){toast("Serve almeno un metodo di pagamento");break}S.methods.splice(+b.dataset.i,1);commit("Metodo rimosso");break;
