@@ -188,6 +188,14 @@ button.row:hover{background:var(--surface-2)}
 .icard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .icard.dim{opacity:.62}
 .ic-head{display:flex;gap:12px;align-items:flex-start}
+.logo,.logo-fb{display:inline-grid;place-items:center;flex:none;vertical-align:-4px;overflow:hidden}
+.logo{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.logo img{width:72%;height:72%;object-fit:contain;display:block}
+.logo-fb{font-family:var(--f-display);font-weight:700;background:var(--c-sub-soft);color:var(--c-sub)}
+.logo-fb.k-altro{background:var(--c-altro-soft);color:var(--c-altro)}
+.logo-fb.k-rata{background:var(--c-rata-soft);color:var(--c-rata)}
+.ic-logo-wrap{display:flex;flex:none}
+.ic-logo-wrap .logo,.ic-logo-wrap .logo-fb{vertical-align:0}
 .ic-logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;flex:none;font-family:var(--f-display);font-weight:700}
 .ic-title{flex:1;min-width:0}
 .ic-title h3{font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -712,6 +720,42 @@ async function startAuth(){
   $a("authEmail").focus();
 }
 
+/* ================= logo automatico delle subscription ================= */
+const BRANDS=[
+ ["netflix","netflix.com"],["spotify","spotify.com"],["disney","disneyplus.com"],["prime video","primevideo.com"],["amazon","amazon.it"],
+ ["youtube","youtube.com"],["apple music","music.apple.com"],["apple tv","tv.apple.com"],["apple one","apple.com"],["icloud","icloud.com"],["apple","apple.com"],
+ ["dazn","dazn.com"],["now tv","nowtv.it"],["now","nowtv.it"],["sky","sky.it"],["paramount","paramountplus.com"],["infinity","mediasetinfinity.mediaset.it"],["timvision","timvision.it"],
+ ["crunchyroll","crunchyroll.com"],["max","max.com"],["discovery","discoveryplus.com"],["raiplay","raiplay.it"],
+ ["chatgpt","openai.com"],["openai","openai.com"],["claude","claude.ai"],["anthropic","anthropic.com"],["gemini","gemini.google.com"],["perplexity","perplexity.ai"],["midjourney","midjourney.com"],
+ ["adobe","adobe.com"],["photoshop","adobe.com"],["lightroom","adobe.com"],["canva","canva.com"],["figma","figma.com"],["notion","notion.so"],["dropbox","dropbox.com"],
+ ["google one","one.google.com"],["google drive","drive.google.com"],["google","google.com"],["microsoft","microsoft.com"],["office","microsoft.com"],["xbox","xbox.com"],["game pass","xbox.com"],
+ ["playstation","playstation.com"],["ps plus","playstation.com"],["nintendo","nintendo.com"],["steam","steampowered.com"],["twitch","twitch.tv"],["discord","discord.com"],
+ ["audible","audible.it"],["kindle","amazon.it"],["deezer","deezer.com"],["tidal","tidal.com"],["soundcloud","soundcloud.com"],["apple podcast","podcasts.apple.com"],
+ ["splice","splice.com"],["ableton","ableton.com"],["native instruments","native-instruments.com"],["fl studio","image-line.com"],["image-line","image-line.com"],["serato","serato.com"],
+ ["rekordbox","rekordbox.com"],["distrokid","distrokid.com"],["tunecore","tunecore.com"],["landr","landr.com"],["waves","waves.com"],["plugin alliance","plugin-alliance.com"],["izotope","izotope.com"],
+ ["davinci","blackmagicdesign.com"],["blackmagic","blackmagicdesign.com"],["capcut","capcut.com"],["epidemic","epidemicsound.com"],["artlist","artlist.io"],
+ ["github","github.com"],["hostinger","hostinger.com"],["aruba","aruba.it"],["godaddy","godaddy.com"],["squarespace","squarespace.com"],["wix","wix.com"],["supabase","supabase.com"],["vercel","vercel.com"],
+ ["linkedin","linkedin.com"],["tinder","tinder.com"],["bumble","bumble.com"],["hinge","hinge.co"],["duolingo","duolingo.com"],["strava","strava.com"],["onlyfans","onlyfans.com"],["patreon","patreon.com"],
+ ["tim","tim.it"],["vodafone","vodafone.it"],["windtre","windtre.it"],["wind","windtre.it"],["iliad","iliad.it"],["fastweb","fastweb.it"],["ho mobile","ho-mobile.it"],["ho.","ho-mobile.it"],["very mobile","verymobile.it"],["kena","kenamobile.it"],["poste","poste.it"],
+ ["enel","enel.it"],["a2a","a2a.eu"],["hera","gruppohera.it"],["eni","eniplenitude.com"],["plenitude","eniplenitude.com"],["edison","edisonenergia.it"],["iren","irenlucegas.it"],["sorgenia","sorgenia.it"],
+ ["telepass","telepass.com"],["revolut","revolut.com"],["n26","n26.com"],["paypal","paypal.com"],["satispay","satispay.com"],["hype","hype.it"],["fineco","finecobank.com"],
+ ["mcfit","mcfit.com"],["virgin active","virginactive.it"],["anytime fitness","anytimefitness.com"],["technogym","technogym.com"],
+ ["uber","uber.com"],["glovo","glovoapp.com"],["deliveroo","deliveroo.it"],["just eat","justeat.it"],["vinted","vinted.it"],["ebay","ebay.it"]];
+function brandDomain(name){
+  const n=(" "+String(name||"").toLowerCase().replace(/\+/g," plus ").replace(/[^a-z0-9.]+/g," ")+" ");
+  for(const [k,d] of BRANDS){if(n.includes(" "+k+" "))return d}
+  const w=n.trim().split(" ")[0];
+  return /\.[a-z]{2,}$/.test(w)?w:null;   // se il nome è già un dominio (es. "chess.com")
+}
+function logoHTML(it,size){
+  const name=it.name||"?";const ini=esc(name.trim().charAt(0).toUpperCase()||"?");
+  const d=it.kind==="rata"?null:brandDomain(name);
+  const box=`width:${size}px;height:${size}px;border-radius:${Math.round(size*.28)}px`;
+  if(!d)return `<span class="logo-fb k-${it.kind}" style="${box};font-size:${Math.round(size*.48)}px" aria-hidden="true">${ini}</span>`;
+  return `<span class="logo" style="${box}" aria-hidden="true"><img src="https://icons.duckduckgo.com/ip3/${d}.ico" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.outerHTML='<span class=&quot;logo-fb k-${it.kind}&quot; style=&quot;${box};font-size:${Math.round(size*.48)}px&quot;>${ini}</span>'"></span>`;
+}
+const inlineLogo=o=>o.kind==="rata"?"":logoHTML({name:o.name,kind:o.kind},20)+" ";
+
 /* ================= motore delle scadenze ================= */
 const isRata=it=>it.kind==="rata";
 // sospensioni: elenco di periodi {from,to}; "to" vuoto = finché non la riattivi
@@ -872,7 +916,7 @@ function row(o,opts){
   const p=parse(o.date);
   return `<button class="row" data-act="occ" data-key="${esc(o.key)}">
     <span class="dbox st-${o.status}"><b>${p.d}</b><span>${MSHORT[p.m-1]}</span></span>
-    <span style="min-width:0"><span class="rname" style="display:block">${o.emoji?o.emoji+" ":""}${esc(o.name)}</span>
+    <span style="min-width:0"><span class="rname" style="display:block">${inlineLogo(o)}${esc(o.name)}</span>
       <span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${o.status!=="paid"?rel(o.date):""}</span></span>
     <span class="st"><span class="pill st-${o.status}">${STATUS[o.status]}</span></span>
     <span class="amt ${o.status==="paid"?"paid-amt":""}">${money(o.amount,o.currency)}</span></button>`;
@@ -898,7 +942,7 @@ function vDashboard(){
     <div class="kpi hero"><span class="eyebrow">Da pagare questo mese</span><span class="val">${money(mLeft)}</span>
       <div class="hbar" role="progressbar" aria-label="Pagato questo mese" aria-valuenow="${mTot?Math.round(mPaid/mTot*100):0}" aria-valuemin="0" aria-valuemax="100"><i style="width:${mTot?(mPaid/mTot*100).toFixed(1):0}%"></i></div>
       <div class="hbar-l"><span>Pagato <b>${money(mPaid)}</b></span><span>Totale <b>${money(mTot)}</b></span></div></div>
-    ${next?`<button class="kpi kpi-btn" data-act="occ" data-key="${esc(next.key)}"><span class="eyebrow">Prossima scadenza</span><span class="name">${next.emoji?next.emoji+" ":""}${esc(next.name)}</span><span class="val">${money(next.amount,next.currency)}</span><span class="sub">${fmtDate(next.date)} · ${diffDays(TODAY,next.date)===0?"oggi":diffDays(TODAY,next.date)===1?"domani":"tra "+diffDays(TODAY,next.date)+" giorni"}</span></button>`:`<div class="kpi"><span class="eyebrow">Prossima scadenza</span><span class="val">—</span><span class="sub">Nessuna scadenza futura</span></div>`}
+    ${next?`<button class="kpi kpi-btn" data-act="occ" data-key="${esc(next.key)}"><span class="eyebrow">Prossima scadenza</span><span class="name">${inlineLogo(next)}${esc(next.name)}</span><span class="val">${money(next.amount,next.currency)}</span><span class="sub">${fmtDate(next.date)} · ${diffDays(TODAY,next.date)===0?"oggi":diffDays(TODAY,next.date)===1?"domani":"tra "+diffDays(TODAY,next.date)+" giorni"}</span></button>`:`<div class="kpi"><span class="eyebrow">Prossima scadenza</span><span class="val">—</span><span class="sub">Nessuna scadenza futura</span></div>`}
     <button class="kpi kpi-btn" data-act="nav" data-v="rate"><span class="eyebrow">Rate attive</span><span class="val">${rates.length}</span><span class="sub">${money(resid)} ancora da pagare</span></button>
     <button class="kpi kpi-btn kpi-sub" data-act="nav" data-v="sub"><span class="eyebrow">Subscription attive · ${subs.length}</span><span class="val">${money(subM)}<small> /mese</small></span><span class="sub">${money(subM*12)} all'anno</span></button>
   </section>
@@ -980,7 +1024,7 @@ function subCard(it){
   const s=subStats(it);const f=FREQ[it.freq]||FREQ.monthly;const c=it.currency||cur();const ss=subStatus(it);const pz=pauseNow(it);
   const pillTxt=ss==="pausa"?(pz.to?`In pausa fino al ${fmtShort(pz.to)}`:"In pausa"):ITEM_STATUS.sub[ss];
   return `<article class="icard ${ss!=="attivo"?"dim":""}">
-   <div class="ic-head"><div class="ic-logo k-${it.kind}">${it.emoji?esc(it.emoji):esc((it.name||"?").charAt(0).toUpperCase())}</div>
+   <div class="ic-head"><div class="ic-logo-wrap">${logoHTML(it,44)}</div>
      <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${esc(it.desc||"")}</div></div>
      ${ss!=="attivo"?`<span class="pill ${ss==="pausa"?"st-due":"st-future"}">${pillTxt}</span>`:""}</div>
    <div class="ic-price">${money(it.amount,c)}<small> / ${it.freq==="custom"?"ogni "+(it.customDays||30)+" giorni":f.short}</small></div>
@@ -1080,7 +1124,7 @@ function prow(o){
   const p=parse(o.date);const sv=o.status==="paid"?"paid":o.status==="late"?"late":"unpaid";
   const cls=o.status==="paid"?"st-paid":o.status==="late"||o.status==="overdue"?"st-overdue":o.status==="due"?"st-due":"st-future";
   return `<div class="prow"><span class="dbox st-${o.status}"><b>${p.d}</b><span>${MSHORT[p.m-1]}</span></span>
-   <button class="open" data-act="occ" data-key="${esc(o.key)}"><span class="rname" style="display:block">${o.emoji?o.emoji+" ":""}${esc(o.name)}</span><span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${o.status==="overdue"?'<b style="color:var(--s-over)">scaduto</b>':o.status==="due"?'<b style="color:var(--s-due)">'+rel(o.date)+"</b>":""}</span></button>
+   <button class="open" data-act="occ" data-key="${esc(o.key)}"><span class="rname" style="display:block">${inlineLogo(o)}${esc(o.name)}</span><span class="rmeta"><span class="kind k-${o.kind}">${kindLabel(o)}</span>${o.status==="overdue"?'<b style="color:var(--s-over)">scaduto</b>':o.status==="due"?'<b style="color:var(--s-due)">'+rel(o.date)+"</b>":""}</span></button>
    <span class="amt">${money(o.amount,o.currency)}</span>
    <span class="sel-wrap"><select class="status ${cls}" data-key="${esc(o.key)}" data-change="status" aria-label="Stato di ${esc(o.name)} del ${fmtDate(o.date)}" ${o.orphan?"disabled":""}>
      <option value="paid" ${sv==="paid"?"selected":""}>Pagato</option><option value="unpaid" ${sv==="unpaid"?"selected":""}>Non pagato</option><option value="late" ${sv==="late"?"selected":""}>In ritardo</option></select></span></div>`;
@@ -1256,7 +1300,7 @@ let toastT;function toast(t){let el=document.getElementById("toast");if(!el){el=
 function openOcc(key){
   const o=compute().byKey[key];if(!o)return;const it=o.item;
   const extra=isRata(it||{})&&o.idx>=0?`Rata ${o.idx+1} di ${it.total}`:"";
-  openModal(`${mHead(`${o.emoji?o.emoji+" ":""}${esc(o.name)}`)}<div class="m-body">
+  openModal(`${mHead(`${inlineLogo(o)}${esc(o.name)}`)}<div class="m-body">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap"><div class="detail-amt">${money(o.amount,o.currency)}</div><span class="pill st-${o.status}">${STATUS[o.status]}</span></div>
     <div class="dlist">
       <div><span>Data</span><b>${fmtDate(o.date,{year:true})}</b></div><div><span>Quando</span><b>${rel(o.date)}</b></div>
