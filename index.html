@@ -195,6 +195,13 @@ button.row:hover{background:var(--surface-2)}
 .logo-fb.k-altro{background:var(--c-altro-soft);color:var(--c-altro)}
 .logo-fb.k-rata{background:var(--c-rata-soft);color:var(--c-rata)}
 .ic-logo-wrap{display:flex;flex:none}
+.via-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.via-opt{position:relative;cursor:pointer}
+.via-opt input{position:absolute;opacity:0;pointer-events:none}
+.via-opt>span{display:flex;align-items:center;justify-content:center;gap:8px;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-weight:600;font-size:14px;color:var(--ink-2);transition:border-color .15s,background .15s}
+.via-opt>span .logo{vertical-align:0}
+.via-opt input:checked+span{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);box-shadow:0 0 0 1px var(--accent)}
+.via-opt input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
 .ic-logo-wrap .logo,.ic-logo-wrap .logo-fb{vertical-align:0}
 .ic-logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;flex:none;font-family:var(--f-display);font-weight:700}
 .ic-title{flex:1;min-width:0}
@@ -723,7 +730,9 @@ async function startAuth(){
 /* ================= logo automatico delle subscription ================= */
 const BRANDS=[
  ["netflix","netflix.com"],["spotify","spotify.com"],["disney","disneyplus.com"],["prime video","primevideo.com"],["amazon","amazon.it"],
- ["youtube","youtube.com"],["apple music","music.apple.com"],["apple tv","tv.apple.com"],["apple one","apple.com"],["icloud","icloud.com"],["apple","apple.com"],
+ ["youtube","youtube.com"],["apple music","music.apple.com"],["apple tv","tv.apple.com"],["apple one","apple.com"],["iphone","apple.com"],["ipad","apple.com"],["macbook","apple.com"],["mac","apple.com"],["imac","apple.com"],["airpods","apple.com"],["apple watch","apple.com"],
+ ["samsung","samsung.com"],["galaxy","samsung.com"],["dyson","dyson.com"],["sony","sony.com"],["lg","lg.com"],["xiaomi","mi.com"],["ikea","ikea.com"],["mediaworld","mediaworld.it"],["unieuro","unieuro.it"],["euronics","euronics.it"],["zalando","zalando.it"],["klarna","klarna.com"],["scalapay","scalapay.com"],["findomestic","findomestic.it"],["compass","compass.it"],["agos","agos.it"],["tesla","tesla.com"],["fiat","fiat.it"],["toyota","toyota.it"],["volkswagen","volkswagen.it"],["bmw","bmw.it"],["audi","audi.it"],
+ ["pioneer","pioneerdj.com"],["roland","roland.com"],["yamaha","yamaha.com"],["focusrite","focusrite.com"],["universal audio","uaudio.com"],["genelec","genelec.com"],["kali audio","kaliaudio.com"],["arturia","arturia.com"],["akai","akaipro.com"],["thomann","thomann.de"],["icloud","icloud.com"],["apple","apple.com"],
  ["dazn","dazn.com"],["now tv","nowtv.it"],["now","nowtv.it"],["sky","sky.it"],["paramount","paramountplus.com"],["infinity","mediasetinfinity.mediaset.it"],["timvision","timvision.it"],
  ["crunchyroll","crunchyroll.com"],["max","max.com"],["discovery","discoveryplus.com"],["raiplay","raiplay.it"],
  ["chatgpt","openai.com"],["openai","openai.com"],["claude","claude.ai"],["anthropic","anthropic.com"],["gemini","gemini.google.com"],["perplexity","perplexity.ai"],["midjourney","midjourney.com"],
@@ -747,14 +756,15 @@ function brandDomain(name){
   const w=n.trim().split(" ")[0];
   return /\.[a-z]{2,}$/.test(w)?w:null;   // se il nome è già un dominio (es. "chess.com")
 }
+const VIA={paypal:{l:"PayPal",d:"paypal.com"},amazon:{l:"Amazon",d:"amazon.it"}};
 function logoHTML(it,size){
   const name=it.name||"?";const ini=esc(name.trim().charAt(0).toUpperCase()||"?");
-  const d=it.kind==="rata"?null:brandDomain(name);
+  const d=it.via&&VIA[it.via]?VIA[it.via].d:brandDomain(name);
   const box=`width:${size}px;height:${size}px;border-radius:${Math.round(size*.28)}px`;
   if(!d)return `<span class="logo-fb k-${it.kind}" style="${box};font-size:${Math.round(size*.48)}px" aria-hidden="true">${ini}</span>`;
   return `<span class="logo" style="${box}" aria-hidden="true"><img src="https://icons.duckduckgo.com/ip3/${d}.ico" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.outerHTML='<span class=&quot;logo-fb k-${it.kind}&quot; style=&quot;${box};font-size:${Math.round(size*.48)}px&quot;>${ini}</span>'"></span>`;
 }
-const inlineLogo=o=>o.kind==="rata"?"":logoHTML({name:o.name,kind:o.kind},20)+" ";
+const inlineLogo=o=>logoHTML({name:o.name,kind:o.kind,via:o.via},20)+" ";
 
 /* ================= motore delle scadenze ================= */
 const isRata=it=>it.kind==="rata";
@@ -793,14 +803,14 @@ function compute(){
       let paid=rec?rec.status==="paid":implicit;
       if(!paid&&(isRata(it)?(inactive(it)&&d>=TODAY):(inPause(it,d)||(it.status==="cancellato"&&d>=(it.cancelledOn||TODAY)))))continue;
       seen.add(key);
-      const o={key,item:it,itemId:it.id,idx:i,date:d,amount:(paid&&rec&&rec.amount!=null)?rec.amount:amount,name:it.name,kind:it.kind,category:it.category,method:it.method,notes:it.notes,emoji:it.emoji,implicit,rec,currency:it.currency||cur()};
+      const o={key,item:it,itemId:it.id,idx:i,date:d,amount:(paid&&rec&&rec.amount!=null)?rec.amount:amount,name:it.name,kind:it.kind,category:it.category,method:it.method,notes:it.notes,emoji:it.emoji,via:it.via||"",implicit,rec,currency:it.currency||cur()};
       o.status=stat(o,paid,rec);occ.push(o);byKey[key]=o;byItem[it.id].push(o);
     }
   }
   // pagamenti registrati che non corrispondono più a una scadenza (es. dopo una modifica): restano nello storico
   for(const key in S.payments){const r=S.payments[key];if(seen.has(key)||r.status!=="paid")continue;
     const it=S.items.find(x=>x.id===r.itemId)||null;
-    const o={key,item:it,itemId:r.itemId,idx:-1,date:r.date,amount:r.amount,name:r.name,kind:r.kind,category:r.category,method:r.method,notes:"",emoji:r.emoji||"",implicit:false,rec:r,orphan:true,currency:cur(),status:"paid"};
+    const o={key,item:it,itemId:r.itemId,idx:-1,date:r.date,amount:r.amount,name:r.name,kind:r.kind,category:r.category,method:r.method,notes:"",emoji:r.emoji||"",via:r.via||"",implicit:false,rec:r,orphan:true,currency:cur(),status:"paid"};
     occ.push(o);byKey[key]=o;if(byItem[r.itemId])byItem[r.itemId].push(o)}
   occ.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.name>b.name?1:-1));
   C={occ,byKey,byItem};return C;
@@ -991,8 +1001,8 @@ function rataCard(it){
   const s=rataStats(it);const pct=Math.round(s.pct*100);const f=FREQ[it.freq]||FREQ.monthly;
   const done=it.status==="completata"||s.restN===0;
   return `<article class="icard ${it.status!=="attiva"||done?"dim":""}">
-   <div class="ic-head"><div class="ic-logo k-rata">${esc((it.name||"?").trim().charAt(0).toUpperCase())}</div>
-     <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${esc(it.desc||"")}</div></div>
+   <div class="ic-head"><div class="ic-logo-wrap">${logoHTML(it,44)}</div>
+     <div class="ic-title"><h3>${esc(it.name)}</h3><div class="muted">${it.via&&VIA[it.via]?"Tramite "+VIA[it.via].l:esc(it.desc||"")}</div></div>
      ${it.status!=="attiva"?`<span class="pill st-future">${ITEM_STATUS.rata[it.status]}</span>`:done?`<span class="pill st-paid">Completata</span>`:""}</div>
    <div class="ic-price">${money(it.amount)}<small> / ${it.freq==="custom"?"ogni "+(it.customDays||30)+" giorni":f.short}</small></div>
    <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>${s.paidN}</b> di ${s.count} rate pagate</span><b class="num">${pct}%</b></div>
@@ -1315,7 +1325,7 @@ function openOcc(key){
 }
 function setStatus(key,v){
   const o=compute().byKey[key];if(!o||o.orphan)return;
-  if(v==="paid")S.payments[key]={status:"paid",paidOn:TODAY,amount:o.amount,name:o.name,kind:o.kind,category:o.category,method:o.method,emoji:o.emoji||"",itemId:o.itemId,date:o.date};
+  if(v==="paid")S.payments[key]={status:"paid",paidOn:TODAY,amount:o.amount,name:o.name,kind:o.kind,category:o.category,method:o.method,emoji:o.emoji||"",via:o.via||"",itemId:o.itemId,date:o.date};
   else if(v==="late")S.payments[key]={status:"late",itemId:o.itemId,date:o.date};
   else{if(o.implicit)S.payments[key]={status:"unpaid",itemId:o.itemId,date:o.date};else delete S.payments[key]}
   commit(v==="paid"?`${o.name}: pagamento registrato`:v==="late"?"Segnato come in ritardo":"Segnato come non pagato");
@@ -1335,6 +1345,8 @@ function openForm(kind,id){
    <input type="hidden" name="kind" value="${kind}">
    <div class="fgrid">
     <div class="field full"><label for="f_name">Nome</label><input type="text" id="f_name" name="name" value="${esc(d.name)}" required maxlength="60" placeholder="${kind==="rata"?"Es. iPhone 16 Pro":kind==="sub"?"Es. Netflix":"Es. Bolletta gas"}"></div>
+    ${kind==="rata"?`<div class="field full"><span class="flabel">Pagata tramite</span><div class="via-pick" role="radiogroup" aria-label="Pagata tramite">
+      ${[["paypal","PayPal"],["amazon","Amazon"],["","Altro"]].map(([v,l])=>`<label class="via-opt"><input type="radio" name="via" value="${v}" ${(d.via||"")===v?"checked":""}><span>${v?logoHTML({name:l,kind:"rata",via:v},22):""}${l}</span></label>`).join("")}</div></div>`:""}
     ${kind!=="rata"?`<input type="hidden" name="emoji" value="${esc(d.emoji||"")}">`:""}
     ${kind!=="rata"?`<input type="hidden" name="desc" value="${esc(d.desc||"")}">`:""}
     ${kind==="rata"?`<div class="field"><label for="f_amount">Importo totale</label><input type="text" inputmode="decimal" id="f_amount" name="amount" data-prev="1" value="${it?String(rataTotal(d).toFixed(2)).replace(".",","):""}" required placeholder="Es. 1800"></div>
@@ -1400,7 +1412,7 @@ function saveForm(form){
   const amount=numIn(g("amount"));if(!g("name"))return err("Inserisci un nome.");if(!(amount>0))return err("Inserisci un importo valido, ad esempio 17,99.");
   const it={id:prev?prev.id:uid(),kind,name:g("name"),desc:g("desc"),amount:Math.round(amount*100)/100,freq:g("freq")||"monthly",customDays:Math.max(1,parseInt(g("customDays"))||30),category:g("category"),method:g("method"),notes:g("notes"),status:g("status"),reminder:+g("reminder")||0,demo:false};
   if(kind==="rata"){
-    it.total=parseInt(g("total"));it.start=g("start");it.emoji="";it.autopay=!!fd.get("autopay");
+    it.total=parseInt(g("total"));it.start=g("start");it.emoji="";it.via=VIA[g("via")]?g("via"):"";it.autopay=!!fd.get("autopay");
     if(!(it.total>=1&&it.total<=600))return err("Il numero di rate deve essere tra 1 e 600.");
     if(!it.start)return err("Indica la data della prima rata.");
     if(Math.round(amount*100)<it.total)return err("L'importo totale è troppo basso per questo numero di rate.");
