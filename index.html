@@ -195,6 +195,22 @@ button.row:hover{background:var(--surface-2)}
 .logo-fb.k-altro{background:var(--c-altro-soft);color:var(--c-altro)}
 .logo-fb.k-rata{background:var(--c-rata-soft);color:var(--c-rata)}
 .ic-logo-wrap{display:flex;flex:none}
+.via-split{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--line-2);gap:2px;margin:2px 0 16px}
+.via-split i{display:block;height:100%}
+.via-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.via-col{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface-2)}
+.via-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.via-h .logo{vertical-align:0}
+.via-h b{font-weight:600;font-size:15px}
+.via-pct{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:2px 8px}
+.via-dot{width:28px;height:28px;border-radius:8px;background:var(--line);flex:none}
+.via-big{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+.via-big small{font-family:var(--f-body);font-size:13px;font-weight:500;color:var(--muted);margin-left:3px}
+.via-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-top:1px solid var(--line-2)}
+.via-row span{color:var(--muted)}
+.via-row b{font-weight:600}
+.via-dot{background:var(--muted);opacity:.35}
+@media (max-width:700px){.via-cols{gap:8px}.via-col{padding:11px 12px}.via-h{margin-bottom:4px}.via-h .logo{width:24px!important;height:24px!important}.via-big{font-size:20px;margin-bottom:2px}.via-row{padding:3px 0;font-size:12.5px}}
 .via-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .via-opt{position:relative;cursor:pointer}
 .via-opt input{position:absolute;opacity:0;pointer-events:none}
@@ -1151,6 +1167,25 @@ function vUpcoming(){
 }
 
 /* ================= ANALISI ================= */
+function viaPanel(){
+  const groups=[["paypal","PayPal","#0070E0"],["amazon","Amazon","#FF9900"],["","Altro","var(--muted)"]].map(([v,l,c])=>{
+    const its=S.items.filter(it=>isRata(it)&&(it.via||"")===v);
+    const act=its.filter(it=>!inactive(it)&&rataStats(it).restN>0);
+    return{v,l,c,n:act.length,month:act.reduce((s,it)=>s+monthlyEq(it),0),resid:its.reduce((s,it)=>s+rataStats(it).restAmt,0),
+      paid:its.reduce((s,it)=>s+(rataStats(it).paidAmt||0),0),tot:its.length}});
+  const shown=groups.filter(g=>g.tot>0);
+  if(!shown.length)return "";
+  const totM=groups.reduce((t,g)=>t+g.month,0),totR=groups.reduce((t,g)=>t+g.resid,0);
+  const pct=(a,b)=>b>0?Math.round(a/b*100):0;
+  return `<div class="panel"><div class="panel-h"><h2>Rate per PayPal e Amazon</h2><span class="muted" style="font-size:13px">rate attive</span></div>
+    ${totM>0?`<div class="via-split" role="img" aria-label="Divisione delle rate mensili">${groups.filter(g=>g.month>0).map(g=>`<i style="width:${(g.month/totM*100).toFixed(2)}%;background:${g.c}" title="${g.l}: ${money(g.month)}"></i>`).join("")}</div>`:""}
+    <div class="via-cols">${shown.map(g=>`<div class="via-col">
+      <div class="via-h">${g.v?logoHTML({name:g.l,kind:"rata",via:g.v},28):`<span class="via-dot"></span>`}<b>${g.l}</b><span class="via-pct">${pct(g.month,totM)}%</span></div>
+      <div class="via-big">${money(g.month)}<small>/mese</small></div>
+      <div class="via-row"><span>Rate attive</span><b>${g.n}</b></div>
+      <div class="via-row"><span>Ancora da pagare</span><b>${money(g.resid)}</b></div>
+      <div class="via-row"><span>Quota del debito</span><b>${pct(g.resid,totR)}%</b></div></div>`).join("")}</div></div>`;
+}
 function vAnalysis(){
   const months=[];for(let i=-5;i<=12;i++)months.push(monthKey(addMonths(monthKey(TODAY)+"-01",i)));
   const data=months.map(k=>{const l=compute().occ.filter(o=>monthKey(o.date)===k);return{k,rata:sum(l.filter(o=>o.kind==="rata")),sub:sum(l.filter(o=>o.kind==="sub")),altro:sum(l.filter(o=>o.kind==="altro"))}});
@@ -1161,7 +1196,7 @@ function vAnalysis(){
   const f12=sum(compute().occ.filter(o=>unpaid(o)&&o.date>=TODAY&&o.date<addMonths(TODAY,12)));
   const cats={};for(const it of S.items){if(inactive(it)||(isRata(it)&&rataStats(it).restN===0))continue;cats[it.name||"Senza nome"]=(cats[it.name||"Senza nome"]||0)+monthlyEq(it)}
   const catArr=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const catMax=catArr.length?catArr[0][1]:1;
-  return `<div class="panel"><div class="panel-h"><h2>Impegni mese per mese</h2><span class="muted" style="font-size:13px">ultimi 5 mesi e prossimi 12</span></div>
+  return `${viaPanel()}<div class="panel"><div class="panel-h"><h2>Impegni mese per mese</h2><span class="muted" style="font-size:13px">ultimi 5 mesi e prossimi 12</span></div>
     <div class="legend" style="margin-bottom:10px"><span><i style="background:var(--c-rata)"></i>Rate</span><span><i style="background:var(--c-sub)"></i>Subscription</span><span><i style="background:var(--c-altro)"></i>Altre spese</span><span class="muted">I mesi futuri sono una previsione</span></div>
     <div class="chart-wrap">${barChart(data)}</div></div>
   <div class="grid-3" style="align-items:start">
