@@ -1795,7 +1795,8 @@ function wCalc(src){
 function wSay(t,cls){const m=document.getElementById("wMsg");if(!m)return;m.textContent=t;m.className="wl-msg "+(cls||"");m.hidden=!t}
 
 async function wFetch(url){
-  const{data,error}=await sb.functions.invoke("wishlist-scrape",{body:{url}});
+  // sempre in Irlanda (UE, euro): dalla regione più vicina all'Italia (Zurigo) alcuni negozi mostrano i prezzi svizzeri
+  const{data,error}=await sb.functions.invoke("wishlist-scrape",{body:{url},headers:{"x-region":"eu-west-1"}});
   if(error){let m="Non sono riuscito a leggere la pagina";try{const j=await error.context.json();if(j&&j.error)m=j.error}catch(x){}throw new Error(m)}
   return data||{};
 }

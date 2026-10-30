@@ -5,7 +5,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-region",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (body: unknown, status = 200) =>
@@ -16,8 +16,10 @@ const HEADERS = {
   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
 };
+// Negozi Shopify & co. cambiano prezzo e valuta in base al paese: si chiede il mercato italiano in euro.
+const MARKET_IT = "localization=IT; cart_currency=EUR";
 async function get(url: string, cookie?: string) {
-  const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(12000), headers: cookie ? { ...HEADERS, Cookie: cookie } : HEADERS });
+  const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(12000), headers: { ...HEADERS, Cookie: cookie ? `${MARKET_IT}; ${cookie}` : MARKET_IT } });
   return { url: res.url || url, status: res.status, html: (await res.text()).slice(0, 3_000_000) };
 }
 
@@ -234,12 +236,16 @@ Deno.serve(async (req) => {
   const title = (product?.name && decode(String(product.name))) || meta(html, ["og:title", "twitter:title"]) || (pageTitle && decode(pageTitle)) || null;
   const description = meta(html, ["og:description", "description", "twitter:description"]);
   const offers = product?.offers ? (Array.isArray(product.offers) ? product.offers[0] : product.offers) : null;
-  const price = parsePrice(offers?.price ?? offers?.lowPrice) ??
+  // valuta: se il negozio risponde in un'altra valuta (es. CHF) il prezzo non si usa
+  const currency = String(offers?.priceCurrency ?? meta(html, ["product:price:currency", "og:price:currency", "priceCurrency"]) ?? "EUR").toUpperCase();
+  let price = parsePrice(offers?.price ?? offers?.lowPrice) ??
     parsePrice(meta(html, ["product:price:amount", "og:price:amount", "price"])) ?? null;
+  let note: string | undefined;
+  if (price != null && currency !== "EUR") { note = `Il negozio ha mostrato il prezzo in ${currency}: scrivi a mano quello in euro.`; price = null; }
 
   return json({
     image: absolute(image, finalUrl), title,
     description: description && description.length > 300 ? description.slice(0, 297) + "…" : description,
-    price, store: host.replace(/^www\./, ""),
+    price, store: host.replace(/^www\./, ""), ...(note ? { note } : {}),
   });
 });
