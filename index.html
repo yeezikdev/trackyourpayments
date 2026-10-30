@@ -469,6 +469,10 @@ table.inc input{height:34px;max-width:130px;text-align:right;font-variant-numeri
 .wl-ph .ico{width:40px;height:40px;color:#B8BCCB;stroke-width:1.4}
 .wl-badge{position:absolute;top:10px;left:10px;background:var(--s-over);color:#fff;font-family:var(--f-display);font-weight:700;font-size:15px;line-height:1;padding:6px 9px;border-radius:9px;font-variant-numeric:tabular-nums}
 .wl-prio{position:absolute;top:10px;right:10px;background:var(--accent);color:var(--accent-ink);font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:99px}
+.wl-src{position:absolute;bottom:10px;right:10px;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:4px 9px 4px 7px;border-radius:99px;backdrop-filter:blur(4px)}
+.wl-src .ico{width:13px;height:13px;stroke-width:2.2}
+.wl-src.auto{background:color-mix(in srgb,var(--s-paid) 16%,#fff);color:#167A3E;box-shadow:inset 0 0 0 1px color-mix(in srgb,#167A3E 30%,transparent)}
+.wl-src.man{background:#F3F4F8;color:#464C64;box-shadow:inset 0 0 0 1px #DADDE8}
 .wl-done{position:absolute;bottom:10px;left:10px;background:var(--s-paid);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:99px}
 .wl-card .ic-title h3{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:16px;line-height:1.3}
 .wl-desc{margin:0;font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -478,7 +482,7 @@ table.inc input{height:34px;max-width:130px;text-align:right;font-variant-numeri
 .wl-var{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
 .wl-var.down{color:var(--s-paid)}.wl-var.up{color:var(--s-over)}.wl-var.same{color:var(--muted)}
 .wl-spark{display:block;width:100%;height:26px}
-.wl-card .ic-foot{padding:10px 12px;gap:4px;border-top:1px solid var(--line-2)}
+.wl-card .ic-foot{padding:10px 12px;gap:2px;border-top:1px solid var(--line-2)}
 .wl-card .ic-foot .grow{flex:1 1 auto}
 .wl-calc{display:flex;gap:8px 22px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 12px;font-size:13.5px;color:var(--ink-2)}
 .wl-calc b{color:var(--ink);font-variant-numeric:tabular-nums}
@@ -1659,6 +1663,8 @@ const wIn=n=>n==null?"":String(n).replace(".",",");
 const safeUrl=u=>{try{const x=new URL(String(u||"").trim());return /^https?:$/.test(x.protocol)?x.href:null}catch(e){return null}};
 const wOn=()=>store.mode==="cloud"&&!!sb;
 // Amazon: il prezzo si aggiorna a mano (dal server non si vede sempre l'offerta di Amazon.it)
+// prezzo automatico (letto dal sito) o manuale (Amazon, senza link, o sito non leggibile)
+const wSrc=i=>!i.url||isAmz(i.url)?"manual":(i.price_source||"auto");
 const isAmz=u=>{try{const h=new URL(String(u||"")).hostname.toLowerCase();return /(^|\.)amazon\.[a-z.]+$/.test(h)||/^(amzn\.(eu|to)|a\.co)$/.test(h)}catch(e){return false}};
 const wFind=id=>W.items.find(x=>x.id===id);
 
@@ -1742,7 +1748,7 @@ function wCard(i){
     :`<div class="wl-var ${v.diff<0?"down":"up"}">${v.diff<0?"▼":"▲"} ${money(Math.abs(v.diff))} (${v.pct>0?"+":""}${v.pct.toFixed(1).replace(".",",")}%) da ${money(v.prev)}</div>`):"";
   return `<article class="icard wl-card ${i.purchased?"dim":""}">
    <div class="wl-thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-wimg="1">`:`<span class="wl-ph">${ico("gift")}</span>`}
-     ${pct&&!i.purchased?`<span class="wl-badge">-${pct}%</span>`:""}${i.priority===1&&!i.purchased?`<span class="wl-prio">Priorità</span>`:""}${i.purchased?`<span class="wl-done">${rata?"Comprato a rate":"Comprato"}</span>`:""}</div>
+     ${pct&&!i.purchased?`<span class="wl-badge">-${pct}%</span>`:""}${i.priority===1&&!i.purchased?`<span class="wl-prio">Priorità</span>`:""}${!i.purchased?(wSrc(i)==="auto"?`<span class="wl-src auto" title="Prezzo automatico: l'app lo legge dal sito e lo ricontrolla">${ico("refresh")}Auto</span>`:`<span class="wl-src man" title="${!i.url?"Prezzo manuale: prodotto senza link":isAmz(i.url)?"Prezzo manuale: su Amazon il prezzo si inserisce a mano":"Prezzo manuale: inserito a mano o non leggibile dal sito. Con ↻ puoi riprovare a leggerlo"}">${ico("edit")}Manuale</span>`):""}${i.purchased?`<span class="wl-done">${rata?"Comprato a rate":"Comprato"}</span>`:""}</div>
    <div class="wl-in">
      <div class="ic-title"><h3 title="${esc(i.title)}">${esc(i.title)}</h3><div class="muted">${esc([i.store,i.category].filter(Boolean).join(" · "))}</div></div>
      ${i.description?`<p class="wl-desc">${esc(i.description)}</p>`:""}
@@ -1755,7 +1761,7 @@ function wCard(i){
        :`<button class="btn sm primary" data-act="wBuy" data-id="${i.id}">Comprato</button>`}
      <span class="grow"></span>
      ${link?`<a class="btn sm ghost" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="Apri nel negozio" title="Apri nel negozio">${ico("ext")}</a>`:""}
-     ${link&&!i.purchased&&isAmz(link)?`<button class="btn sm ghost" data-act="wManual" data-id="${i.id}" aria-label="Aggiorna prezzo a mano" title="Aggiorna il prezzo (Amazon: a mano)">€ Prezzo</button>`:""}
+     ${!i.purchased&&wSrc(i)==="manual"?`<button class="btn sm ghost" data-act="wManual" data-id="${i.id}" aria-label="Aggiorna prezzo a mano" title="Inserisci il prezzo a mano" style="font-weight:800;font-size:15px;min-width:32px;padding:0 9px">€</button>`:""}
      ${link&&!i.purchased&&!isAmz(link)?`<button class="btn sm ghost" data-act="wCheck" data-id="${i.id}" aria-label="Ricontrolla il prezzo" title="Ricontrolla il prezzo">${ico("refresh")}</button>`:""}
      <button class="btn sm ghost" data-act="wHist" data-id="${i.id}" aria-label="Storico prezzi" title="Storico prezzi">${ico("trend")}</button>
      <button class="btn sm ghost" data-act="wEdit" data-id="${i.id}" aria-label="Modifica ${esc(i.title)}" title="Modifica">${ico("edit")}</button></div>
@@ -1764,6 +1770,7 @@ function wCard(i){
 
 /* ---------- form prodotto ---------- */
 function openWishForm(id){
+  W.lastScrape=null;
   const i=id?wFind(id):null;
   const cats=[...new Set(W.items.map(x=>x.category).filter(Boolean))];
   const sel=(arr,v)=>arr.map(([k,l])=>`<option value="${k}" ${String(v)===String(k)?"selected":""}>${l}</option>`).join("");
@@ -1821,11 +1828,12 @@ async function wScrape(){
   if(!url){wSay("Incolla prima un link valido (deve iniziare con https://).","err");return}
   const b=document.getElementById("wScrapeBtn");b.disabled=true;b.textContent="Leggo…";wSay("");
   try{
-    const d=await wFetch(url);const set=(id,v)=>{const n=document.getElementById(id);if(n&&v&&!n.value.trim())n.value=v};
+    const d=await wFetch(url);W.lastScrape={url,price:null};const set=(id,v)=>{const n=document.getElementById(id);if(n&&v&&!n.value.trim())n.value=v};
     if(d.image)document.getElementById("w_img").value=d.image;
     set("w_title",d.title&&d.title.slice(0,200));set("w_desc",d.description);set("w_store",d.store);
     const amzLink=isAmz(url);
     if(amzLink){d.price=null;d.note=null}
+    W.lastScrape.price=d.price!=null?d.price:null;
     if(d.price!=null){const P=document.getElementById("w_price"),S=document.getElementById("w_sale"),p=wNum(P.value);
       // Amazon: se c'è un prezzo consigliato più alto, quello è il prezzo pieno e il prezzo attuale è lo scontato
       if(d.listPrice!=null&&d.listPrice>d.price&&p==null){P.value=wIn(d.listPrice);S.value=wIn(d.price);wCalc("w_sale")}
@@ -1852,6 +1860,12 @@ async function saveWish(form){
   const row={title:g("title"),description:g("description")||null,url:safeUrl(g("url")),image_url:safeUrl(g("image_url")),store:g("store")||null,
     category:g("category")||null,priority:+g("priority")||2,price,sale_price:sale};
   if(prev){row.purchased=!!fd.get("purchased");if(!row.purchased)row.rata_id=null}
+  // automatico se il prezzo salvato è quello letto dal sito; se non lo hai cambiato resta com'era
+  const ls=W.lastScrape;
+  if(!row.url||isAmz(row.url))row.price_source="manual";
+  else if(ls&&ls.url===row.url)row.price_source=ls.price!=null&&(sale===ls.price||price===ls.price)?"auto":"manual";
+  else if(prev&&prev.price===price&&prev.sale_price===sale&&prev.url===row.url)row.price_source=prev.price_source||null;
+  else row.price_source="manual";   // prezzo scritto a mano: con ↻ si può riprovare a leggerlo dal sito
   const btn=document.getElementById("wSave");btn.disabled=true;
   const{error}=prev?await sb.from("wishlist_items").update(row).eq("id",prev.id):await sb.from("wishlist_items").insert(row);
   btn.disabled=false;
@@ -1890,15 +1904,22 @@ function openWishHist(id){
 async function wCheck(i,quiet){
   if(!i||!i.url||isAmz(i.url))return"skip";
   try{
-    const d=await wFetch(i.url);if(d.price==null){if(!quiet)toast(d.amazonSeller===false?"Prezzo di Amazon.it non visibile: controlla sul sito":"Prezzo non trovato sul sito");return"nf"}
+    const d=await wFetch(i.url);
+    if(d.price==null){
+      // il sito non dà il prezzo: diventa manuale
+      if(i.price_source!=="manual"){await sb.from("wishlist_items").update({price_source:"manual"}).eq("id",i.id);i.price_source="manual";if(UI.view==="wishlist")render()}
+      if(!quiet)toast((d.note||"Prezzo non trovato sul sito")+" Usa «€ Prezzo» per inserirlo a mano.");
+      return"nf";
+    }
     const upd={};if(!i.image_url&&d.image)upd.image_url=d.image;const cur=wEff(i);
     if(d.price!==cur){
       // sotto al prezzo pieno = prezzo scontato; uguale o sopra = nuovo prezzo pieno, senza sconto
       if(i.price==null||d.price>=i.price){upd.price=d.price;upd.sale_price=null}else upd.sale_price=d.price}
-    if(!Object.keys(upd).length){if(!quiet)toast("Prezzo invariato: "+money(cur));return"same"}
-    const{error}=await sb.from("wishlist_items").update(upd).eq("id",i.id);if(error)throw error;
-    if(!quiet){toast(cur!=null&&d.price<cur?`Sceso a ${money(d.price)}!`:`Nuovo prezzo: ${money(d.price)}`);loadWish(true)}
-    return upd.price!=null||upd.sale_price!==undefined?"changed":"same";
+    if(i.price_source!=="auto")upd.price_source="auto";
+    const changed=upd.price!==undefined||upd.sale_price!==undefined;
+    if(Object.keys(upd).length){const{error}=await sb.from("wishlist_items").update(upd).eq("id",i.id);if(error)throw error}
+    if(!quiet){toast(!changed?"Prezzo invariato: "+money(cur):cur!=null&&d.price<cur?`Sceso a ${money(d.price)}!`:`Nuovo prezzo: ${money(d.price)}`);loadWish(true)}
+    return changed?"changed":"same";
   }catch(e){if(!quiet)toast(e.message||"Errore");return"err"}
 }
 async function wRefreshAll(){
@@ -1932,6 +1953,7 @@ async function saveWishManual(){
   // con prezzo pieno più alto: quello attuale è lo scontato; altrimenti è il nuovo prezzo pieno
   const keepFull=full==null&&i.price!=null&&i.price>now;
   const upd=full!=null&&full>now?{price:full,sale_price:now}:keepFull?{price:i.price,sale_price:now}:{price:now,sale_price:null};
+  upd.price_source="manual";
   const{error}=await sb.from("wishlist_items").update(upd).eq("id",i.id);
   if(error)return err(netErr(error)?"Connessione assente: riprova.":error.message);
   const before=wEff(i);closeModal();
