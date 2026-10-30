@@ -504,10 +504,7 @@ textarea.wl-ta{height:auto;min-height:64px;padding:9px 11px;resize:vertical;font
 .wl-tab b{font-size:12px;font-weight:700;background:var(--surface-2);color:var(--muted);border-radius:99px;padding:1px 8px;font-variant-numeric:tabular-nums}
 .wl-tab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .wl-tab.on b{background:color-mix(in srgb,var(--accent-ink) 22%,transparent);color:var(--accent-ink)}
-.wl-sec{display:flex;flex-direction:column;gap:12px}
-.wl-sec-h{display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap}
-.wl-sec-h h2{font-size:19px;font-weight:600}
-.wl-sec-h .link{margin-left:auto}
+
 .spin .ico{animation:wlspin 1s linear infinite}@keyframes wlspin{to{transform:rotate(360deg)}}
 @media (max-width:560px){.wl-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wl-kpis .kpi{padding:14px}.wl-kpis .kpi.hero{grid-column:1/-1}.wl-kpis .kpi .val{font-size:22px}.wl-kpis .kpi .sub{font-size:12px}.wl-bar [data-act=wRefreshAll]{flex:1 1 100%}.wl-bar select{flex:1 1 40%}.wl-cards{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}.wl-in{padding:12px}.wl-card .ic-price{font-size:20px}.wl-desc,.wl-spark{display:none}}
 </style>
@@ -1736,11 +1733,6 @@ function vWishlist(){
     <button class="btn" data-act="wRefreshAll" ${W.busy?"disabled":""}>${ico("refresh")} <span id="wRefLbl">Ricontrolla prezzi</span></button></div>
   ${!W.items.length?`<div class="panel">${emptyBox("La wishlist è vuota","Incolla il link di un prodotto: foto, nome e prezzo vengono letti in automatico.",`<button class="btn primary" data-act="wAdd">${ico("plus")} Aggiungi prodotto</button>`)}</div>`
    :!list.length?`<div class="panel">${emptyBox("Nessun prodotto","Prova a cambiare ricerca o filtri.")}</div>`
-   :!W.cat&&catKeys.length>1?catKeys.map(k=>{const g=list.filter(i=>catOf(i)===k);if(!g.length)return"";
-        const gt=g.filter(i=>!i.purchased).reduce((s,i)=>s+(wEff(i)??0),0);
-        return `<section class="wl-sec"><div class="wl-sec-h"><h2>${esc(catName(k))}</h2><span class="muted">${g.length===1?"1 prodotto":g.length+" prodotti"}${gt>0?" · "+money(gt):""}</span>
-          <button class="link" data-act="wCat" data-v="${esc(k)}">Vedi solo questa</button></div>
-          <div class="cards wl-cards">${g.map(wCard).join("")}</div></section>`}).join("")
    :`<div class="cards wl-cards">${list.map(wCard).join("")}</div>`}`;
 }
 function wCard(i){

@@ -53,7 +53,7 @@ Nel menu c'è la sezione **Wishlist** per i prodotti da prendere (pensata per il
 - **Amazon:** foto e nome vengono letti dal link, ma il **prezzo si inserisce a mano** (quello venduto da Amazon.it) con il pulsante «€ Prezzo» sulla scheda; finisce comunque nello storico con la variazione. «Ricontrolla prezzi» salta i prodotti Amazon. Motivo: il server che legge le pagine non è in Italia e Amazon non gli mostra sempre l'offerta di Amazon.it.
 - Prezzo pieno, prezzo scontato, sconto in € e in %: scrivi il prezzo scontato oppure la percentuale e l'altro si calcola.
 - Ogni cambio di prezzo finisce nello storico (tabella `wishlist_price_history`): la scheda mostra la variazione e un mini-grafico.
-- **Categorie:** le schede in alto (Tutte, Tecnologia, Shopping, …) filtrano per categoria; con «Tutte» i prodotti sono divisi in sezioni con il totale di ciascuna.
+- **Categorie:** le schede in alto (Tutte, Tecnologia, Shopping, …) filtrano per categoria; «Tutte» mostra tutti i prodotti insieme.
 - «Ricontrolla prezzi» rilegge i prezzi dai siti (tutti tranne Amazon).
 - **Comprato → L'ho preso a rate** apre una nuova rata già compilata con nome, prezzo e PayPal/Amazon; quando la salvi il prodotto viene segnato come comprato e collegato alla rata («Vedi la rata»).
 
