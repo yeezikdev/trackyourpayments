@@ -44,3 +44,15 @@ Su iPhone: Safari → Condividi → *Aggiungi alla schermata Home* per usarla co
 - Le rate cadono lo stesso giorno di ogni mese della prima rata (es. 31 → 28/29 febbraio, 30 aprile…).
 - “Rate già pagate” serve per le rateizzazioni iniziate prima di usare l'app.
 - Il pagamento di una scadenza viene contato nel mese della **data di pagamento** che inserisci.
+
+## Wishlist
+
+Nel menu c'è la sezione **Wishlist** per i prodotti da prendere (pensata per il Black Friday).
+
+- Incolli il link del prodotto e premi «Leggi dal link»: foto, nome, descrizione e prezzo vengono letti dalla pagina del negozio dalla funzione Supabase `wishlist-scrape` (codice in `supabase/functions/wishlist-scrape/`).
+- Prezzo pieno, prezzo scontato, sconto in € e in %: scrivi il prezzo scontato oppure la percentuale e l'altro si calcola.
+- Ogni cambio di prezzo finisce nello storico (tabella `wishlist_price_history`): la scheda mostra la variazione e un mini-grafico.
+- «Ricontrolla prezzi» rilegge i prezzi dai siti.
+- **Comprato → L'ho preso a rate** apre una nuova rata già compilata con nome, prezzo e PayPal/Amazon; quando la salvi il prodotto viene segnato come comprato e collegato alla rata («Vedi la rata»).
+
+I prodotti stanno nelle tabelle `wishlist_items` e `wishlist_price_history`, separate da `app_state`, nello stesso progetto Supabase.

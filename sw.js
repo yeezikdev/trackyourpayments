@@ -1,6 +1,6 @@
 // Track your payments – service worker
 // Fa aprire l'app anche senza connessione. I dati (Supabase) arrivano sempre dal server.
-const CACHE = "typ-v1";
+const CACHE = "typ-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png"];
 
 self.addEventListener("install", e => {
@@ -19,7 +19,6 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname.endsWith("supabase.co") || url.hostname.endsWith("supabase.in")) return; // dati: sempre online
-  if (url.pathname.includes("/wishlist/")) return; // la Wishlist è un'app a parte: non la gestiamo qui
 
   // la pagina: prima la versione online (così vedi subito gli aggiornamenti), senza rete quella salvata
   if (req.mode === "navigate") {
