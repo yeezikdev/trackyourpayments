@@ -19,6 +19,7 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname.endsWith("supabase.co") || url.hostname.endsWith("supabase.in")) return; // dati: sempre online
+  if (url.pathname.includes("/wishlist/")) return; // la Wishlist è un'app a parte: non la gestiamo qui
 
   // la pagina: prima la versione online (così vedi subito gli aggiornamenti), senza rete quella salvata
   if (req.mode === "navigate") {
