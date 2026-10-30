@@ -1804,12 +1804,15 @@ async function wScrape(){
     const d=await wFetch(url);const set=(id,v)=>{const n=document.getElementById(id);if(n&&v&&!n.value.trim())n.value=v};
     if(d.image)document.getElementById("w_img").value=d.image;
     set("w_title",d.title&&d.title.slice(0,200));set("w_desc",d.description);set("w_store",d.store);
-    if(d.price!=null){const P=document.getElementById("w_price"),p=wNum(P.value);
-      if(p!=null&&d.price<p){document.getElementById("w_sale").value=wIn(d.price);wCalc("w_sale")}
+    if(d.price!=null){const P=document.getElementById("w_price"),S=document.getElementById("w_sale"),p=wNum(P.value);
+      // Amazon: se c'è un prezzo consigliato più alto, quello è il prezzo pieno e il prezzo attuale è lo scontato
+      if(d.listPrice!=null&&d.listPrice>d.price&&p==null){P.value=wIn(d.listPrice);S.value=wIn(d.price);wCalc("w_sale")}
+      else if(p!=null&&d.price<p){S.value=wIn(d.price);wCalc("w_sale")}
       else if(p==null){P.value=wIn(d.price);wCalc("w_price")}}
     wPreview();
-    const got=[d.image&&"foto",d.title&&"nome",d.price!=null&&"prezzo"].filter(Boolean);
-    wSay(got.length?`Trovato: ${got.join(", ")}. Controlla e salva.`:"Il negozio non mostra i dati: compilali a mano.",got.length?"ok":"err");
+    const got=[d.image&&"foto",d.title&&"nome",d.price!=null&&(d.amazonSeller?"prezzo di Amazon.it":"prezzo")].filter(Boolean);
+    if(d.note)wSay((got.length?`Trovato: ${got.join(", ")}. `:"")+d.note,"err");
+    else wSay(got.length?`Trovato: ${got.join(", ")}. Controlla e salva.`:"Il negozio non mostra i dati: compilali a mano.",got.length?"ok":"err");
   }catch(e){wSay(e.message+": puoi compilare a mano.","err")}
   finally{b.disabled=false;b.textContent="Leggi dal link"}
 }
@@ -1864,7 +1867,7 @@ function openWishHist(id){
 async function wCheck(i,quiet){
   if(!i||!i.url)return"skip";
   try{
-    const d=await wFetch(i.url);if(d.price==null){if(!quiet)toast("Prezzo non trovato sul sito");return"nf"}
+    const d=await wFetch(i.url);if(d.price==null){if(!quiet)toast(d.amazonSeller===false?"Prezzo di Amazon.it non visibile: controlla sul sito":"Prezzo non trovato sul sito");return"nf"}
     const upd={};if(!i.image_url&&d.image)upd.image_url=d.image;const cur=wEff(i);
     if(d.price!==cur){
       // sotto al prezzo pieno = prezzo scontato; uguale o sopra = nuovo prezzo pieno, senza sconto
