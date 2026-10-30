@@ -50,10 +50,10 @@ Su iPhone: Safari → Condividi → *Aggiungi alla schermata Home* per usarla co
 Nel menu c'è la sezione **Wishlist** per i prodotti da prendere (pensata per il Black Friday).
 
 - Incolli il link del prodotto e premi «Leggi dal link»: foto, nome, descrizione e prezzo vengono letti dalla pagina del negozio dalla funzione Supabase `wishlist-scrape` (codice in `supabase/functions/wishlist-scrape/`).
-- **Amazon:** il prezzo letto è solo quello **venduto da Amazon.it** (codice venditore `A11IL2PNWYJU7H`), mai quello del venditore più economico; il "prezzo consigliato" diventa il prezzo pieno. Il server che legge le pagine non è in Italia e Amazon non gli permette di impostare un indirizzo italiano, quindi per i prodotti che Amazon.it non spedisce all'estero (es. Apple, console) l'offerta di Amazon.it non è visibile: in quel caso il prezzo resta vuoto e l'app lo dice, invece di mettere un prezzo sbagliato.
+- **Amazon:** foto e nome vengono letti dal link, ma il **prezzo si inserisce a mano** (quello venduto da Amazon.it) con il pulsante «€ Prezzo» sulla scheda; finisce comunque nello storico con la variazione. «Ricontrolla prezzi» salta i prodotti Amazon. Motivo: il server che legge le pagine non è in Italia e Amazon non gli mostra sempre l'offerta di Amazon.it.
 - Prezzo pieno, prezzo scontato, sconto in € e in %: scrivi il prezzo scontato oppure la percentuale e l'altro si calcola.
 - Ogni cambio di prezzo finisce nello storico (tabella `wishlist_price_history`): la scheda mostra la variazione e un mini-grafico.
-- «Ricontrolla prezzi» rilegge i prezzi dai siti.
+- «Ricontrolla prezzi» rilegge i prezzi dai siti (tutti tranne Amazon).
 - **Comprato → L'ho preso a rate** apre una nuova rata già compilata con nome, prezzo e PayPal/Amazon; quando la salvi il prodotto viene segnato come comprato e collegato alla rata («Vedi la rata»).
 
 I prodotti stanno nelle tabelle `wishlist_items` e `wishlist_price_history`, separate da `app_state`, nello stesso progetto Supabase.

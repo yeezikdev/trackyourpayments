@@ -1650,6 +1650,8 @@ const wNum=v=>{const n=numIn(v);return isFinite(n)&&n>=0?Math.round(n*100)/100:n
 const wIn=n=>n==null?"":String(n).replace(".",",");
 const safeUrl=u=>{try{const x=new URL(String(u||"").trim());return /^https?:$/.test(x.protocol)?x.href:null}catch(e){return null}};
 const wOn=()=>store.mode==="cloud"&&!!sb;
+// Amazon: il prezzo si aggiorna a mano (dal server non si vede sempre l'offerta di Amazon.it)
+const isAmz=u=>{try{const h=new URL(String(u||"")).hostname.toLowerCase();return /(^|\.)amazon\.[a-z.]+$/.test(h)||/^(amzn\.(eu|to)|a\.co)$/.test(h)}catch(e){return false}};
 const wFind=id=>W.items.find(x=>x.id===id);
 
 async function loadWish(silent){
@@ -1737,7 +1739,8 @@ function wCard(i){
        :`<button class="btn sm primary" data-act="wBuy" data-id="${i.id}">Comprato</button>`}
      <span class="grow"></span>
      ${link?`<a class="btn sm ghost" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="Apri nel negozio" title="Apri nel negozio">${ico("ext")}</a>`:""}
-     ${link&&!i.purchased?`<button class="btn sm ghost" data-act="wCheck" data-id="${i.id}" aria-label="Ricontrolla il prezzo" title="Ricontrolla il prezzo">${ico("refresh")}</button>`:""}
+     ${link&&!i.purchased&&isAmz(link)?`<button class="btn sm ghost" data-act="wManual" data-id="${i.id}" aria-label="Aggiorna prezzo a mano" title="Aggiorna il prezzo (Amazon: a mano)">€ Prezzo</button>`:""}
+     ${link&&!i.purchased&&!isAmz(link)?`<button class="btn sm ghost" data-act="wCheck" data-id="${i.id}" aria-label="Ricontrolla il prezzo" title="Ricontrolla il prezzo">${ico("refresh")}</button>`:""}
      <button class="btn sm ghost" data-act="wHist" data-id="${i.id}" aria-label="Storico prezzi" title="Storico prezzi">${ico("trend")}</button>
      <button class="btn sm ghost" data-act="wEdit" data-id="${i.id}" aria-label="Modifica ${esc(i.title)}" title="Modifica">${ico("edit")}</button></div>
   </article>`;
@@ -1804,6 +1807,8 @@ async function wScrape(){
     const d=await wFetch(url);const set=(id,v)=>{const n=document.getElementById(id);if(n&&v&&!n.value.trim())n.value=v};
     if(d.image)document.getElementById("w_img").value=d.image;
     set("w_title",d.title&&d.title.slice(0,200));set("w_desc",d.description);set("w_store",d.store);
+    const amzLink=isAmz(url);
+    if(amzLink){d.price=null;d.note=null}
     if(d.price!=null){const P=document.getElementById("w_price"),S=document.getElementById("w_sale"),p=wNum(P.value);
       // Amazon: se c'è un prezzo consigliato più alto, quello è il prezzo pieno e il prezzo attuale è lo scontato
       if(d.listPrice!=null&&d.listPrice>d.price&&p==null){P.value=wIn(d.listPrice);S.value=wIn(d.price);wCalc("w_sale")}
@@ -1811,7 +1816,8 @@ async function wScrape(){
       else if(p==null){P.value=wIn(d.price);wCalc("w_price")}}
     wPreview();
     const got=[d.image&&"foto",d.title&&"nome",d.price!=null&&(d.amazonSeller?"prezzo di Amazon.it":"prezzo")].filter(Boolean);
-    if(d.note)wSay((got.length?`Trovato: ${got.join(", ")}. `:"")+d.note,"err");
+    if(amzLink)wSay((got.length?`Trovato: ${got.join(", ")}. `:"")+"Su Amazon il prezzo lo inserisci tu: guarda quello venduto da Amazon.it.","ok");
+    else if(d.note)wSay((got.length?`Trovato: ${got.join(", ")}. `:"")+d.note,"err");
     else wSay(got.length?`Trovato: ${got.join(", ")}. Controlla e salva.`:"Il negozio non mostra i dati: compilali a mano.",got.length?"ok":"err");
   }catch(e){wSay(e.message+": puoi compilare a mano.","err")}
   finally{b.disabled=false;b.textContent="Leggi dal link"}
@@ -1865,7 +1871,7 @@ function openWishHist(id){
 
 /* ---------- ricontrolla prezzo dal sito ---------- */
 async function wCheck(i,quiet){
-  if(!i||!i.url)return"skip";
+  if(!i||!i.url||isAmz(i.url))return"skip";
   try{
     const d=await wFetch(i.url);if(d.price==null){if(!quiet)toast(d.amazonSeller===false?"Prezzo di Amazon.it non visibile: controlla sul sito":"Prezzo non trovato sul sito");return"nf"}
     const upd={};if(!i.image_url&&d.image)upd.image_url=d.image;const cur=wEff(i);
@@ -1879,10 +1885,40 @@ async function wCheck(i,quiet){
   }catch(e){if(!quiet)toast(e.message||"Errore");return"err"}
 }
 async function wRefreshAll(){
-  const list=W.items.filter(i=>i.url&&!i.purchased);if(!list.length){toast("Nessun prodotto con link da controllare");return}
+  const amz=W.items.filter(i=>i.url&&!i.purchased&&isAmz(i.url)).length;
+  const list=W.items.filter(i=>i.url&&!i.purchased&&!isAmz(i.url));if(!list.length){toast(amz?"I prodotti Amazon si aggiornano a mano con il pulsante €":"Nessun prodotto con link da controllare");return}
   if(W.busy)return;W.busy=true;render();let n=0,ch=0;
   for(const i of list){const l=document.getElementById("wRefLbl");if(l)l.textContent=`${++n} di ${list.length}…`;if(await wCheck(i,true)==="changed")ch++}
-  W.busy=false;toast(ch?(ch===1?"1 prezzo aggiornato":`${ch} prezzi aggiornati`):"Nessun cambio di prezzo");loadWish(true);
+  W.busy=false;toast((ch?(ch===1?"1 prezzo aggiornato":`${ch} prezzi aggiornati`):"Nessun cambio di prezzo")+(amz?` · ${amz} Amazon da aggiornare a mano`:""));loadWish(true);
+}
+
+/* ---------- aggiornamento manuale del prezzo (Amazon) ---------- */
+function openWishManual(id){const i=wFind(id);if(!i)return;const link=safeUrl(i.url);
+  openModal(`${mHead("Aggiorna prezzo")}<form id="wManualForm" novalidate><div class="m-body">
+    <p style="margin:0;font-weight:600">${esc(i.title)}</p>
+    <p class="muted" style="margin:0;font-size:13.5px">Apri la pagina, guarda il prezzo <b>venduto da Amazon.it</b> e scrivilo qui. Finisce nello storico come gli altri.</p>
+    ${link?`<a class="btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${ico("ext")} Apri su Amazon</a>`:""}
+    <div class="fgrid">
+      <div class="field"><label for="wm_now">Prezzo attuale</label><input type="text" inputmode="decimal" id="wm_now" value="${wIn(wEff(i))}" placeholder="0,00" autofocus></div>
+      <div class="field"><label for="wm_full">Prezzo pieno</label><input type="text" inputmode="decimal" id="wm_full" value="${wIn(i.price)}" placeholder="0,00"><span class="hint">Il prezzo barrato / consigliato, se c'è</span></div>
+    </div><div class="err" id="wmErr" hidden></div></div>
+    <div class="m-foot"><button type="button" class="btn ghost" data-act="close">Annulla</button><button type="submit" class="btn primary">Salva prezzo</button></div>
+    <input type="hidden" id="wm_id" value="${id}"></form>`);
+  const n=document.getElementById("wm_now");if(n){n.focus();n.select()}}
+async function saveWishManual(){
+  const i=wFind(document.getElementById("wm_id").value);if(!i)return;
+  const err=m=>{const e=document.getElementById("wmErr");e.textContent=m;e.hidden=false};
+  const nowV=document.getElementById("wm_now").value.trim(),fullV=document.getElementById("wm_full").value.trim();
+  const now=wNum(nowV),full=fullV?wNum(fullV):null;
+  if(now==null||now<=0)return err("Scrivi il prezzo attuale, ad esempio 89,99.");
+  if(fullV&&full==null)return err("Prezzo pieno non valido.");
+  // con prezzo pieno più alto: quello attuale è lo scontato; altrimenti è il nuovo prezzo pieno
+  const keepFull=full==null&&i.price!=null&&i.price>now;
+  const upd=full!=null&&full>now?{price:full,sale_price:now}:keepFull?{price:i.price,sale_price:now}:{price:now,sale_price:null};
+  const{error}=await sb.from("wishlist_items").update(upd).eq("id",i.id);
+  if(error)return err(netErr(error)?"Connessione assente: riprova.":error.message);
+  const before=wEff(i);closeModal();
+  toast(before!=null&&now<before?`Sceso a ${money(now)}!`:before!=null&&now>before?`Salito a ${money(now)}`:"Prezzo salvato");loadWish(true);
 }
 
 /* ---------- comprato: a rate o pagato subito ---------- */
@@ -1921,6 +1957,7 @@ document.addEventListener("click",e=>{
     case"add":if(UI.view==="wishlist"&&!b.dataset.kind&&wOn()){openWishForm();break}openForm(b.dataset.kind||(UI.view==="rate"?"rata":"sub"));break;
     case"wAdd":openWishForm();break;case"wEdit":openWishForm(b.dataset.id);break;case"wHist":openWishHist(b.dataset.id);break;
     case"wScrape":wScrape();break;case"wAskDel":wAskDel(b.dataset.id);break;case"wDoDel":wDoDel(b.dataset.id);break;
+    case"wManual":openWishManual(b.dataset.id);break;
     case"wCheck":{const i=wFind(b.dataset.id);b.disabled=true;b.classList.add("spin");wCheck(i).finally(()=>{b.disabled=false;b.classList.remove("spin")});break}
     case"wRefreshAll":wRefreshAll();break;case"wReload":W.err="";render();break;
     case"wBuy":openWishBuy(b.dataset.id);break;case"wBuyRate":wBuyRate(b.dataset.id);break;case"wBuyPaid":wBuyPaid(b.dataset.id);break;
@@ -1993,6 +2030,7 @@ document.addEventListener("submit",e=>{
   e.preventDefault();const f=e.target;
   if(f.getAttribute("id")==="itemForm"){saveForm(f);return}
   if(f.getAttribute("id")==="wishForm"){saveWish(f);return}
+  if(f.getAttribute("id")==="wManualForm"){saveWishManual();return}
   if(f.dataset.form==="incOne"){const n=numIn(document.getElementById("incOneVal").value);if(!(n>=0)){toast("Inserisci un importo, ad esempio 1850");return}
     S.income[f.dataset.k]=Math.round(n*100)/100;commit("Stipendio salvato");openIncMonth(f.dataset.k);return}
   if(f.dataset.form==="incFill"){const n=numIn(document.getElementById("incFillVal").value);if(!(n>0)){toast("Inserisci un importo, ad esempio 1850");return}
